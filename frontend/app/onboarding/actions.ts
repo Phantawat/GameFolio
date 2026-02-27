@@ -20,15 +20,18 @@ export async function completeOnboarding(prevState: any, formData: FormData) {
   const bio = formData.get('bio') as string
   const region = formData.get('region') as string
 
-  // Insert into player_profiles
+  // Insert or Update player_profiles
+  // We use upsert to handle cases where a profile might have been partially created
+  // or if the user is re-submitting.
   const { error } = await supabase
     .from('player_profiles')
-    .insert({
+    .upsert({
       user_id: user.id,
       gamertag: gamertag,
       bio: bio,
       region: region,
-    })
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
 
   if (error) {
     console.error('Onboarding Error:', error)

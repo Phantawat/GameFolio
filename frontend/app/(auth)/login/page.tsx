@@ -8,20 +8,30 @@ import Link from 'next/link'
 import { login } from '@/app/auth/actions'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { useEffect, useState } from 'react'
-import { Eye, EyeOff, Gamepad2, Sparkles } from 'lucide-react'
+import { useEffect, useState, useTransition } from 'react'
+import { Eye, EyeOff, Gamepad2, Sparkles, Loader2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
   const [showPassword, setShowPassword] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     if (message) {
       toast.info(message)
     }
   }, [message])
+
+  async function handleLogin(formData: FormData) {
+    startTransition(async () => {
+      const result = await login(formData)
+      if (result?.error) {
+        toast.error(result.error)
+      }
+    })
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col relative">
@@ -40,7 +50,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <form action={login} className="space-y-4">
+            <form action={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-zinc-300 font-medium">Email Address</Label>
                 <Input 
@@ -77,8 +87,15 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold h-10 mt-2">
-                Sign In
+              <Button type="submit" disabled={isPending} className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold h-10 mt-2">
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 

@@ -5,16 +5,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { completeOnboarding } from './actions'
-import { useFormState } from 'react-dom'
+import { useActionState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { useEffect } from 'react'
 
 const initialState = {
   error: '',
 }
 
 export default function OnboardingPage() {
-  const [state, formAction] = useFormState(completeOnboarding, initialState)
+  const [state, formAction] = useActionState(completeOnboarding, initialState)
 
   useEffect(() => {
     if (state?.error) {
