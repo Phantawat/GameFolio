@@ -1,43 +1,37 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { createSafeAction } from '@/lib/safe-action'
 
-export async function completeOnboarding(prevState: any, formData: FormData) {
-  const supabase = await createClient()
+// ─── Schema ───────────────────────────────────────────────────────────────────
 
-  // Verify the user is authenticated
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+const onboardingSchema = z.object({
+  gamertag: z.string().min(2, 'Gamertag must be at least 2 characters'),
+  bio: z.string().optional(),
+  region: z.string().optional(),
+})
 
-  if (!user) {
-    redirect('/login')
-  }
+// ─── Action ───────────────────────────────────────────────────────────────────
 
-  const gamertag = formData.get('gamertag') as string
-  const bio = formData.get('bio') as string
-  const region = formData.get('region') as string
-
-  // Insert or Update player_profiles
-  // We use upsert to handle cases where a profile might have been partially created
-  // or if the user is re-submitting.
-  const { error } = await supabase
-    .from('player_profiles')
-    .upsert({
-      user_id: user.id,
-      gamertag: gamertag,
-      bio: bio,
-      region: region,
+export const completeOnboarding = createSafeAction(onboardingSchema, async (data, ctx) => {
+  const { error } = await ctx.supabase.from('player_profiles').upsert(
+    {
+      user_id: ctx.user.id,
+      gamertag: data.gamertag,
+      bio: data.bio ?? null,
+      region: data.region ?? null,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' })
+    },
+    { onConflict: 'user_id' }
+  )
 
   if (error) {
-    console.error('Onboarding Error:', error)
+    console.error('[completeOnboarding] error:', error)
     return { error: error.message }
   }
 
   revalidatePath('/dashboard', 'layout')
   redirect('/dashboard/player')
-}
+})

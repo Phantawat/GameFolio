@@ -15,40 +15,43 @@
 ## 2. Next.js App Router Structure
 We use **Route Groups** (folders in parentheses) to organize the application logically without affecting the URL paths. This separates the landing page from the secure dashboards.
 
+> **Note:** Source files live directly under `frontend/app/` (not `src/`). The
+> route group `(dashboard)` contains a nested `dashboard/` folder so that all
+> protected routes are served at `/dashboard/*`.
+
 ```text
-src/
+frontend/
 ├── app/
 │   ├── (public)/              # Public-facing pages (SEO optimized)
-│   │   ├── page.tsx           # Landing Page
-│   │   ├── tryouts/           # Public Job Board
-│   │   └── players/           # Public Player Directory
+│   │   └── page.tsx           # Landing Page
 │   │
 │   ├── (auth)/                # Authentication flows
 │   │   ├── login/
-│   │   ├── register/
-│   │   └── onboarding/        # Creates the Player/Org profile after signup
+│   │   └── signup/
 │   │
 │   ├── (dashboard)/           # Protected routes (Requires Auth)
-│   │   ├── layout.tsx         # Shared dashboard sidebar/navbar
-│   │   ├── player/            # Player-specific views
-│   │   ├── org/               # Organization-specific views
-│   │   └── admin/             # Platform admin views
+│   │   └── dashboard/
+│   │       ├── layout.tsx     # Shared dashboard navbar
+│   │       ├── player/        # Player profile & stats
+│   │       ├── tryouts/       # Tryout board
+│   │       └── applications/  # Application tracker
 │   │
-│   ├── api/                   # (Optional) Webhooks or external API routes
-│   │
-│   ├── layout.tsx             # Root layout (Fonts, Meta tags, Global Providers)
+│   ├── auth/                  # Supabase auth callbacks & signout
+│   ├── onboarding/            # Creates the Player profile after signup
+│   ├── layout.tsx             # Root layout (Fonts, Meta, Global Providers)
 │   └── globals.css            # Tailwind directives
 │
 ├── components/
-│   ├── ui/                    # shadcn/ui base components (buttons, inputs)
+│   ├── ui/                    # shadcn/ui base components (buttons, inputs…)
 │   ├── forms/                 # Reusable form components
-│   └── layout/                # Navbars, Sidebars, Footers
+│   └── layout/                # Navbars, Footers
 │
-├── lib/
-│   ├── supabase/              # Supabase clients (server.ts, client.ts, middleware.ts)
-│   └── utils.ts               # Tailwind merge and general helpers
-│
-└── types/                     # Global TypeScript interfaces & Supabase generated types
+└── lib/
+    ├── supabase/              # Supabase clients (server.ts, client.ts, middleware.ts)
+    ├── database.types.ts      # Full typed schema (Row / Insert / Update + enums)
+    ├── queries.ts             # React cache() server-side data fetching helpers
+    ├── safe-action.ts         # createSafeAction wrapper (validation + auth)
+    └── utils.ts               # Tailwind merge and general helpers
 
 ```
 

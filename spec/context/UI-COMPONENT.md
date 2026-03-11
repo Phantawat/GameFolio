@@ -1,63 +1,90 @@
 # 🎨 GameFolio: UI System & Component Guidelines
 
 ## 1. Theming & Color Palette
-GameFolio uses a strictly **dark-mode first** design to align with gaming culture while maintaining a clean, professional "LinkedIn" structure.
+GameFolio uses a **dark-mode only** design with a warm near-black base and a bold orange accent to align with competitive esports culture while maintaining a clean, professional structure.
 
-* **Backgrounds:** Deep slate/zinc. 
-    * App Background: `bg-zinc-950`
-    * Card/Surface Background: `bg-zinc-900`
-* **Borders:** Subtle separation.
-    * Standard Border: `border-zinc-800`
-    * Hover Border: `border-zinc-700`
-* **Typography (Text):** High contrast for readability.
-    * Primary Text: `text-zinc-50`
-    * Muted/Secondary Text: `text-zinc-400`
-* **Accents (The "Esports" Vibe):** Electric Blue.
-    * Primary Buttons/Links: `bg-blue-600 hover:bg-blue-700 text-white`
-    * Active Nav States: `text-blue-500`
-* **Status Colors:**
-    * Success/Active: `text-emerald-500` / `bg-emerald-500/10`
-    * Destructive/Error: `text-red-500` / `bg-red-500/10`
-    * Warning/Pending: `text-amber-500` / `bg-amber-500/10`
+> The entire app has `className="dark"` on the `<html>` tag. All shadcn/ui CSS variables resolve from the `.dark` selector.
+
+### Core Colors (always use these exact values)
+| Role | Value | Usage |
+|---|---|---|
+| Page Background | `bg-[#0F0A09]` | Root layout, page fills |
+| Card / Surface | `bg-[#140C0B]` | All `<Card>` components, list items |
+| Primary Accent | `#FF5C00` / `bg-[#FF5C00]` | Buttons, active nav, progress bars, icons |
+| Accent Hover | `hover:bg-orange-600` | Primary button hover state |
+| Accent Muted | `bg-[#FF5C00]/10` + `text-[#FF5C00]` | Badges, tag pills, subtle highlights |
+
+### Borders
+* Standard: `border-zinc-800`
+* Hover: `hover:border-zinc-700` or `hover:border-zinc-600`
+* Accent outline: `border-[#FF5C00]/20`
+
+### Typography
+| Role | Class |
+|---|---|
+| Primary text | `text-white` or `text-zinc-50` |
+| Body / secondary | `text-zinc-400` |
+| Muted / metadata | `text-zinc-500` |
+| Accent label | `text-[#FF5C00]` |
+| Uppercase label | `text-zinc-300 font-semibold uppercase text-xs tracking-wider` |
+
+### Status Colors
+* **Success / Accepted:** `bg-green-500/20 text-green-500 border-green-500/20`
+* **Pending / Under Review:** `bg-amber-500/20 text-amber-500 border-amber-500/20`
+* **Rejected / Declined:** `bg-zinc-500/20 text-zinc-500 border-zinc-500/20`
+* **Error:** `text-red-400` / `bg-red-500/10`
+* **Active / Live badge:** `bg-[#FF5C00]/10 text-[#FF5C00] border-[#FF5C00]/20` with a pulsing dot
 
 ---
 
 ## 2. Typography & Icons
-* **Font Family:** `Inter` or `Geist` (sans-serif) for clean, modern readability. Monospace fonts (`font-mono`) can be used strictly for stats (e.g., MMR numbers, win rates) to ensure alignment.
-* **Icons:** **Lucide React**. Do not mix and match icon libraries. Use a standard size (e.g., `w-4 h-4` or `w-5 h-5`) and color them using Tailwind text classes (e.g., `text-zinc-400`).
+* **Font Family:** `Geist Sans` (loaded via `next/font/google` in `layout.tsx`). Monospace (`Geist Mono`) for stats like MMR, win rate, and numeric values to ensure alignment.
+* **Headings:** `font-black` or `font-extrabold` with `tracking-tight` for page titles. Section titles use `font-bold uppercase tracking-wide text-sm`.
+* **Icons:** **Lucide React** exclusively. Do not mix icon libraries.
+  * Standard sizes: `w-4 h-4` (inline), `w-5 h-5` (buttons/nav), `w-6 h-6` (feature icons)
+  * Default color: `text-zinc-400` or `text-zinc-500`
+  * Accent icon: `text-[#FF5C00]`
 
 ---
 
 ## 3. Tailwind CSS Rules
-* **Mobile-First Construction:** ALWAYS build the mobile layout first. Add breakpoints (`md:`, `lg:`) only to adjust the layout for larger screens. 
-    * *Example:* `flex flex-col md:flex-row` (Stacks on mobile, side-by-side on desktop).
-* **Utility Class Management:** Use the `cn()` utility (provided by shadcn/ui) to merge Tailwind classes cleanly, especially when passing standard `className` props to custom components.
-* **Spacing Consistency:** Stick to Tailwind's default spacing scale. Use `gap-4` or `gap-6` for grid/flex spacing, and `p-4` or `p-6` for card padding. Avoid arbitrary values like `p-[17px]`.
+* **Mobile-First:** Always build the mobile layout first, then add `md:` / `lg:` breakpoints.
+  * *Example:* `grid grid-cols-1 md:grid-cols-3`
+* **No `p-*` + `pt-*` on the same element** — shorthand `p-*` resets all sides and overrides directional padding. Use `px-*` + `py-*` or `pt-*` + `pb-*` + `px-*` separately.
+* **Arbitrary values** are allowed for brand colours (`bg-[#0F0A09]`, `text-[#FF5C00]`) but not for spacing. Use Tailwind's scale for spacing.
+* **`cn()` utility** from `@/lib/utils` for merging conditional Tailwind classes.
+* **Dashboard layout spacing:** Navbar is `h-16` fixed. Main content uses `pt-24` (via `dashboard/layout.tsx`) to clear it — do not add extra top padding inside page components.
 
 ---
 
 ## 4. shadcn/ui Component Strategy
-Do not build complex interactive components from scratch. Use `shadcn/ui` to install standard primitives and style them to match the GameFolio theme.
+Install primitives with `shadcn/ui` and style them to match the GameFolio dark theme.
 
-* **Forms & Validation:** Use `<Form />` combined with `React Hook Form` and `Zod` for schema validation. This ensures clean error handling for things like tryout postings or profile edits.
-* **Cards:** Use `<Card />`, `<CardHeader />`, `<CardTitle />`, and `<CardContent />` for player stats, tryout listings, and dashboard widgets.
-* **Modals/Drawers:** Use `<Dialog />` for desktop modals (e.g., confirming an application submission) and `<Sheet />` for mobile slide-out menus.
-* **Feedback:** Use `<Toaster />` (Sonner) for all success/error feedback (e.g., "Application submitted successfully" or "Error updating profile").
+* **Cards:** `bg-[#140C0B] border-zinc-800` on every `<Card>`. Use `hover:border-zinc-700 transition-all` for interactive cards.
+* **Inputs / Selects:** `bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-600` with `focus:ring-[#FF5C00]/30 focus:border-[#FF5C00]/50`.
+* **Primary Button:** `bg-[#FF5C00] hover:bg-orange-600 text-white font-bold`.
+* **Ghost / Secondary Button:** `text-zinc-400 hover:text-white hover:bg-zinc-800`.
+* **Forms & Validation:** `<Form />` + `React Hook Form` + `Zod`. Server actions use `useActionState` (React 19) instead of `useFormState`.
+* **Modals/Drawers:** `<Dialog />` for desktop, `<Sheet />` for mobile slide-outs.
+* **Feedback:** `<Toaster />` (Sonner) for all success/error toasts. Never use `alert()`.
+* **Badges:** `<Badge variant="outline">` with custom status colour classes from the Status Colors table above.
 
 ---
 
 ## 5. Custom Reusable Components to Build
-These are GameFolio-specific components you should build once and reuse across the app:
+These are GameFolio-specific components to build once and reuse:
 
-1.  **`<RankBadge />`**: Takes a `rank` string (e.g., "Radiant", "Faceit Level 10") and outputs a standardized pill with the appropriate color mapping.
-2.  **`<GameIcon />`**: Takes a `game_id` and outputs the standardized logo or icon for that game.
-3.  **`<TryoutCard />`**: The standard job board listing component used on both the public search page and the recruiter dashboard.
-4.  **`<ExperienceTimeline />`**: A vertical timeline component to display a player's previous roster history cleanly.
+1. **`<RankBadge />`** — Takes a `rank` string (e.g., "Radiant", "Immortal 1") and renders a pill with an appropriate colour. Orange for top ranks, amber for mid, zinc for unranked.
+2. **`<GameIcon />`** — Takes a `game_id` and renders the standardized game logo or a fallback initial block (`bg-zinc-800 text-zinc-400`).
+3. **`<TryoutCard />`** — Standard recruitment listing card. Top orange accent bar, org avatar, game/role badges, requirements text, `<ApplyButton />` footer.
+4. **`<ExperienceTimeline />`** — Vertical timeline with orange dot (current) / zinc dot (past), role in orange, date range in zinc-500.
+5. **`<StatRow />`** — Reusable `<Separator />`-divided row with a zinc-500 label and white value for stat displays (MMR, win rate, hours).
 
 ---
 
 ## 6. Accessibility (a11y) & UX
-* **Focus States:** Ensure all buttons and inputs have clear focus rings (`focus-visible:ring-2 focus-visible:ring-blue-500`) for keyboard navigation.
-* **Loading States:** Never leave a user wondering if a button click worked.
-    * Use `disabled` and show a spinner inside buttons during mutations (e.g., saving a profile).
-    * Use `<Skeleton />` components to mimic the layout while data is fetching from Supabase.
+* **Focus rings:** `focus-visible:ring-2 focus-visible:ring-[#FF5C00]/50` — orange to match the brand accent.
+* **Loading states on mutations:** Always `disabled` + spinner (`<Loader2 className="animate-spin" />`) inside buttons during server action pending state.
+* **Skeleton loading:** Use `<Skeleton className="bg-zinc-800" />` to mimic layout while data loads from Supabase.
+* **Empty states:** Every list/table must have an empty state with an icon, a heading, a description, and a CTA button. See `ApplicationsList` for reference.
+* **Page entry animation:** All top-level page `<div>` wrappers use `animate-in fade-in slide-in-from-bottom-4 duration-500` for a consistent page transition feel.

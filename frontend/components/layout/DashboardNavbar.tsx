@@ -24,13 +24,14 @@ export default function DashboardNavbar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard/player' },
+    { name: 'Tryouts', href: '/dashboard/tryouts' },
+    { name: 'Applications', href: '/dashboard/applications' },
     { name: 'Tournaments', href: '/dashboard/tournaments' },
     { name: 'Teams', href: '/dashboard/teams' },
-    { name: 'Applications', href: '/dashboard/applications' },
   ]
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#0F0A09]/95 backdrop-blur-md border-b ${isScrolled ? 'border-zinc-800' : 'border-zinc-800/40'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
             
