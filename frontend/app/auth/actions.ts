@@ -3,25 +3,51 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+import type { ActionResult } from '@/lib/safe-action'
 
-export async function login(formData: FormData) {
+// ─── Schema ───────────────────────────────────────────────────────────────────
+
+const authSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
+/**
+ * Auth actions intentionally do NOT use createSafeAction because the user is
+ * not yet authenticated when they call login/signup — the wrapper's session
+ * check would always fail.
+ */
+export async function login(
+  _prevState: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
   const supabase = await createClient()
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const parsed = authSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  })
 
-  // 1. Attempt to log in
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors as Record<string, string[]>
+    return { error: Object.values(fieldErrors).flat()[0] ?? 'Invalid inputs', fieldErrors }
+  }
+
+  const { email, password } = parsed.data
+
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (authError) {
-    // Return the error string so your UI can display it
     return { error: authError.message }
   }
 
-  // 2. Check if the user has completed onboarding
+  // Route based on onboarding status
   const { data: profile } = await supabase
     .from('player_profiles')
     .select('id')
@@ -30,40 +56,38 @@ export async function login(formData: FormData) {
 
   revalidatePath('/', 'layout')
 
-  // 3. Route based on profile existence
   if (!profile) {
     redirect('/onboarding')
   }
 
-  // Note: Later you can check the `user_roles` table here to route to /dashboard/org 
-  // if they are a recruiter instead of a player!
   redirect('/dashboard/player')
 }
 
-export async function signup(formData: FormData) {
-  console.log('Signup action called')
+export async function signup(
+  _prevState: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
   const supabase = await createClient()
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  
-  console.log('Attempting signup for:', email)
-
-  const { error, data } = await supabase.auth.signUp({
-    email,
-    password,
+  const parsed = authSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
   })
 
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors as Record<string, string[]>
+    return { error: Object.values(fieldErrors).flat()[0] ?? 'Invalid inputs', fieldErrors }
+  }
+
+  const { email, password } = parsed.data
+
+  const { error } = await supabase.auth.signUp({ email, password })
+
   if (error) {
-    console.error('Signup error:', error)
-    // Return the error string so your UI can display it inline
+    console.error('[signup] error:', error)
     return { error: error.message }
   }
 
-  console.log('Signup successful, data:', data)
-
   revalidatePath('/', 'layout')
-  
-  // Assuming you have "Confirm Email" turned ON in Supabase Auth settings
   redirect('/login?message=Check your email to confirm your account.')
 }
