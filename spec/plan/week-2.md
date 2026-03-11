@@ -10,3 +10,10 @@
 - [x] Verify RLS policies are actively blocking unauthorized access. (Added `Users can insert own profile` policy in `supabase/week-2-fixes.sql`)
 
 **Deliverable:** Users can securely log in, create their base gamer profile, and are routed to the correct dashboard based on their role.
+
+---
+
+## 🧪 Testing Rule
+
+> **After completing each task, write the corresponding tests before checking the box.**
+> Refer to [`test-plan.md`](./test-plan.md) for the planned test cases for each week.

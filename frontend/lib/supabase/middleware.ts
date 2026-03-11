@@ -42,22 +42,23 @@ export async function updateSession(request: NextRequest) {
   // Define protected routes
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
   const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding')
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
+  const isOrgRoute = request.nextUrl.pathname.startsWith('/org')
+  const isAuthRoute =
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/register')
 
-  // Redirect unauthenticated users to login if they try to access dashboard or onboarding
-  if (!user && (isDashboardRoute || isOnboardingRoute)) {
+  // Redirect unauthenticated users to login
+  if (!user && (isDashboardRoute || isOnboardingRoute || isOrgRoute)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Check Onboarding Status (Conceptual - implementation details might vary depending on where 'onboarding_complete' is stored)
-  // For now, let's assume if they are logged in and hit /onboarding, we let them proceed.
-  // If they are logged in and try to access login/register, redirect to dashboard
+  // If logged in, skip auth pages
   if (user && isAuthRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
   }
 
   return response

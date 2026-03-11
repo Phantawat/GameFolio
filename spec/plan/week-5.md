@@ -10,3 +10,10 @@
 - [ ] Implement global error handling and toast notifications for user actions.
 
 **Deliverable:** Full 3-role architecture complete and stable.
+
+---
+
+## 🧪 Testing Rule
+
+> **After completing each task, write the corresponding tests before checking the box.**
+> Refer to [`test-plan.md`](./test-plan.md) for the planned test cases for each week.

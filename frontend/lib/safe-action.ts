@@ -21,8 +21,6 @@
  *   const [state, dispatch] = useActionState(myAction, null)
  */
 
-'use server'
-
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import type { User } from '@supabase/supabase-js'

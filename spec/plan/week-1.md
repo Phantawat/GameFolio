@@ -11,3 +11,10 @@
 - [x] Setup Supabase Storage buckets for `avatars` and `organization_logos`. (See `supabase/setup.sql`)
 
 **Deliverable:** Database finalized, Triggers working, Schema locked, Base catalog data seeded. No UI yet.
+
+---
+
+## 🧪 Testing Rule
+
+> **After completing each task, write the corresponding tests before checking the box.**
+> Refer to [`test-plan.md`](./test-plan.md) for the planned test cases for each week.

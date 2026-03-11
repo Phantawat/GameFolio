@@ -10,3 +10,10 @@
 - [x] Build the "My Applications" tracking view for players.
 
 **Deliverable:** Fully working Player workflow. Test by creating a player account and browsing mock tryouts.
+
+---
+
+## 🧪 Testing Rule
+
+> **After completing each task, write the corresponding tests before checking the box.**
+> Refer to [`test-plan.md`](./test-plan.md) for the planned test cases for each week.

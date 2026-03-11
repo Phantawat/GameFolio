@@ -27,7 +27,7 @@ export default function DashboardNavbar() {
     { name: 'Tryouts', href: '/dashboard/tryouts' },
     { name: 'Applications', href: '/dashboard/applications' },
     { name: 'Tournaments', href: '/dashboard/tournaments' },
-    { name: 'Teams', href: '/dashboard/teams' },
+    { name: 'Org', href: '/org/rosters' },
   ]
 
   return (

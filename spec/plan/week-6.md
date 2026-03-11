@@ -10,3 +10,10 @@
 - [ ] Prepare your final demo script/recording.
 
 **Deliverable:** **🛑 FEATURE FREEZE ON APRIL 8.**
+
+---
+
+## 🧪 Testing Rule
+
+> **After completing each task, write the corresponding tests before checking the box.**
+> The security audit tasks in this week map directly to the RLS policy tests in [`test-plan.md`](./test-plan.md). Run the full regression suite before marking the feature freeze complete.
