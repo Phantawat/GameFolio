@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { useEffect, useState, useTransition } from 'react'
+import { useActionState, useState, useEffect } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff, Sparkles, Gamepad2, Loader2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
@@ -17,7 +17,8 @@ export default function SignupPage() {
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
   const [showPassword, setShowPassword] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  
+  const [state, action, isPending] = useActionState(signup, null)
 
   useEffect(() => {
     if (message) {
@@ -25,7 +26,19 @@ export default function SignupPage() {
     }
   }, [message])
 
-  async function handleSignup(formData: FormData) {
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error)
+    }
+  }, [state])
+
+  // Custom client-side validation for password match before submission could be added,
+  // but for simplicity and robust server validation, we rely on the server or could add
+  // a small client check wrapping the action if needed. 
+  // For strict useActionState pattern, we let the server handle it or use a wrapping handler.
+  
+  // To keep password confirmation validation client-side before server:
+  function handleSubmit(formData: FormData) {
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
 
@@ -33,13 +46,14 @@ export default function SignupPage() {
       toast.error("Passwords do not match")
       return
     }
-
-    startTransition(async () => {
-      const result = await signup(formData)
-      if (result?.error) {
-        toast.error(result.error)
-      }
-    })
+    
+    // Call the server action wrapped by useActionState's dispatcher
+    // However, useActionState's 'action' is a direct form action handler.
+    // We can call it manually: action(formData)
+    // But better to use the form action directly if no pre-validation needed,
+    // or wrap it.
+    
+    action(formData)
   }
 
   return (
@@ -59,7 +73,7 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <form action={handleSignup} className="space-y-4">
+            <form action={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-zinc-300 font-medium">Email Address</Label>
                 <Input 
