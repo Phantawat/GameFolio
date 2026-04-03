@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Ensure Turbopack resolves CSS package imports from the active app directory.
+    root: process.cwd(),
+  },
   images: {
     remotePatterns: [
       {
