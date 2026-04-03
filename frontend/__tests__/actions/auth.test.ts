@@ -8,6 +8,11 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+  }),
+}))
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'

@@ -1,5 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+  APP_SESSION_COOKIE,
+  APP_SESSION_MAX_AGE_MS,
+  APP_SESSION_MAX_AGE_SECONDS,
+} from '@/lib/auth/session'
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -39,16 +44,47 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  if (user) {
+    const sessionStartedAtRaw = request.cookies.get(APP_SESSION_COOKIE)?.value
+    const parsedSessionStartedAt = Number(sessionStartedAtRaw)
+
+    const sessionStartedAt = Number.isFinite(parsedSessionStartedAt)
+      ? parsedSessionStartedAt
+      : Date.now()
+
+    if (Date.now() - sessionStartedAt > APP_SESSION_MAX_AGE_MS) {
+      await supabase.auth.signOut()
+
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('message', 'Session expired after 24 hours. Please sign in again.')
+
+      const expiredResponse = NextResponse.redirect(url)
+      expiredResponse.cookies.delete(APP_SESSION_COOKIE)
+      return expiredResponse
+    }
+
+    response.cookies.set(APP_SESSION_COOKIE, String(sessionStartedAt), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: APP_SESSION_MAX_AGE_SECONDS,
+    })
+  }
+
   // Define protected routes
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
   const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding')
   const isOrgRoute = request.nextUrl.pathname.startsWith('/org')
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
   const isAuthRoute =
     request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/register')
+    request.nextUrl.pathname.startsWith('/register') ||
+    request.nextUrl.pathname.startsWith('/signup')
 
   // Redirect unauthenticated users to login
-  if (!user && (isDashboardRoute || isOnboardingRoute || isOrgRoute)) {
+  if (!user && (isDashboardRoute || isOnboardingRoute || isOrgRoute || isAdminRoute)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

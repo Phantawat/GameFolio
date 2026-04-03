@@ -5,11 +5,17 @@ import { Bell, Search, MessageSquare, Sparkles } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
+import UserDropdownMenu from '@/components/layout/UserDropdownMenu'
 
-export default function OrgNavbar() {
+type OrgNavbarProps = {
+  displayName: string
+  handle: string
+  avatarUrl?: string | null
+}
+
+export default function OrgNavbar({ displayName, handle, avatarUrl }: OrgNavbarProps) {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -80,11 +86,12 @@ export default function OrgNavbar() {
             >
               <MessageSquare className="w-5 h-5" />
             </Button>
-            <Avatar className="h-9 w-9 border border-zinc-700 cursor-pointer">
-              <AvatarFallback className="bg-zinc-700 text-zinc-300 text-xs font-bold">
-                O
-              </AvatarFallback>
-            </Avatar>
+            <UserDropdownMenu
+              displayName={displayName}
+              handle={handle}
+              avatarUrl={avatarUrl}
+              profileHref="/dashboard/player"
+            />
           </div>
         </div>
       </div>

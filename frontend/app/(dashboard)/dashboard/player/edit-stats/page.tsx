@@ -15,7 +15,7 @@ export default async function EditStatsPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!profile) redirect('/onboarding')
+  if (!profile) redirect('/dashboard')
 
   // Fetch all active games with their roles
   // Use or() to include both is_active=true AND is_active=null (unseeded rows)

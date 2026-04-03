@@ -48,7 +48,7 @@ export default async function ApplicationsPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!profile) redirect('/onboarding')
+  if (!profile) redirect('/dashboard')
 
   const { data: rawApplications } = await supabase
     .from('applications')

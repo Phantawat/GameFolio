@@ -11,7 +11,7 @@ export default async function PlayerProfilePage() {
   // Both calls are wrapped in React cache() — deduplicated within this request.
   const profile = await getPlayerProfile()
 
-  if (!profile) redirect('/onboarding')
+  if (!profile) redirect('/dashboard')
 
   const stats = await getPlayerGameStats(profile.id)
 

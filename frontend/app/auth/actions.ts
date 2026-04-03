@@ -2,9 +2,26 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import type { ActionResult } from '@/lib/safe-action'
+import { APP_SESSION_COOKIE, APP_SESSION_MAX_AGE_SECONDS } from '@/lib/auth/session'
+
+function mapAuthError(error: { code?: string; message: string }) {
+  switch (error.code) {
+    case 'email_address_invalid':
+      return 'This email address is not allowed. Please use a valid personal email.'
+    case 'invalid_credentials':
+      return 'Incorrect email or password. Please try again.'
+    case 'email_not_confirmed':
+      return 'Please confirm your email before signing in.'
+    case 'user_already_exists':
+      return 'An account with this email already exists.'
+    default:
+      return error.message || 'Authentication failed. Please try again.'
+  }
+}
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -36,7 +53,8 @@ export async function login(
     return { error: Object.values(fieldErrors).flat()[0] ?? 'Invalid inputs', fieldErrors }
   }
 
-  const { email, password } = parsed.data
+  const email = parsed.data.email.trim().toLowerCase()
+  const { password } = parsed.data
 
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
@@ -44,8 +62,17 @@ export async function login(
   })
 
   if (authError) {
-    return { error: authError.message }
+    return { error: mapAuthError(authError) }
   }
+
+  const cookieStore = await cookies()
+  cookieStore.set(APP_SESSION_COOKIE, String(Date.now()), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: APP_SESSION_MAX_AGE_SECONDS,
+  })
 
   // Route based on onboarding status
   const { data: profile } = await supabase
@@ -79,13 +106,14 @@ export async function signup(
     return { error: Object.values(fieldErrors).flat()[0] ?? 'Invalid inputs', fieldErrors }
   }
 
-  const { email, password } = parsed.data
+  const email = parsed.data.email.trim().toLowerCase()
+  const { password } = parsed.data
 
   const { error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
     console.error('[signup] error:', error)
-    return { error: error.message }
+    return { error: mapAuthError(error) }
   }
 
   revalidatePath('/', 'layout')

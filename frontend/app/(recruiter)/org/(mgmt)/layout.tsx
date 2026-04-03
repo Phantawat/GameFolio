@@ -25,9 +25,19 @@ export default async function OrgMgmtLayout({
 
   if (!membership) redirect('/org/create')
 
+  const { data: profile } = await supabase
+    .from('player_profiles')
+    .select('gamertag')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const fallbackName = user.email?.split('@')[0] ?? 'Recruiter'
+  const displayName = profile?.gamertag ?? fallbackName
+  const handle = `@${displayName.toLowerCase().replace(/\s+/g, '')}`
+
   return (
     <>
-      <OrgNavbar />
+      <OrgNavbar displayName={displayName} handle={handle} />
       <main className="px-6 md:px-8 pt-24 pb-12 max-w-7xl mx-auto space-y-8">
         {children}
       </main>

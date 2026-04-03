@@ -5,11 +5,17 @@ import { Bell, Search, Sparkles, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
+import UserDropdownMenu from '@/components/layout/UserDropdownMenu'
 
-export default function DashboardNavbar() {
+type DashboardNavbarProps = {
+  displayName: string
+  handle: string
+  avatarUrl?: string | null
+}
+
+export default function DashboardNavbar({ displayName, handle, avatarUrl }: DashboardNavbarProps) {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -23,7 +29,7 @@ export default function DashboardNavbar() {
   }, [])
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard/player' },
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Tryouts', href: '/dashboard/tryouts' },
     { name: 'Applications', href: '/dashboard/applications' },
     { name: 'Tournaments', href: '/dashboard/tournaments' },
@@ -50,7 +56,11 @@ export default function DashboardNavbar() {
                   href={item.href}
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-white",
-                    pathname === item.href ? "text-orange-500" : "text-zinc-400"
+                    item.href === '/dashboard'
+                      ? (pathname === '/dashboard' || pathname.startsWith('/dashboard/player')
+                          ? 'text-orange-500'
+                          : 'text-zinc-400')
+                      : (pathname.startsWith(item.href) ? 'text-orange-500' : 'text-zinc-400')
                   )}
                 >
                   {item.name}
@@ -71,10 +81,12 @@ export default function DashboardNavbar() {
             <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full w-9 h-9">
                 <Bell className="w-5 h-5" />
             </Button>
-             <Avatar className="h-9 w-9 border border-zinc-700">
-                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+            <UserDropdownMenu
+              displayName={displayName}
+              handle={handle}
+              avatarUrl={avatarUrl}
+              profileHref="/dashboard/player"
+            />
             
              {/* Mobile Menu Toggle */}
             <div className="md:hidden">

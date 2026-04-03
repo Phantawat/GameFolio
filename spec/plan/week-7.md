@@ -6,6 +6,7 @@
 - [ ] Fix any critical bugs discovered during final walkthroughs.
 - [ ] Rehearse the live demo or record the submission video.
 - [ ] Ensure the Vercel production deployment is stable and environment variables are set correctly.
+- [ ] Run production smoke tests (`e2e/production-smoke.spec.ts`) against live Vercel URL.
 - [ ] Rest and prepare for submission.
 
 ---

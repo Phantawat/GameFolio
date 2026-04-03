@@ -63,7 +63,7 @@ export async function createOrganization(
     if (orgError.code === '23505') {
       return { error: 'An organization with this name already exists.' }
     }
-    return { error: 'Failed to create organization. Please try again.' }
+    return { error: `Failed to create organization: ${orgError.message}` }
   }
 
   // Add user as OWNER
@@ -74,13 +74,19 @@ export async function createOrganization(
   })
 
   if (memberError) {
-    return { error: 'Organization created but failed to set up membership.' }
+    return { error: `Organization created but failed to set up membership: ${memberError.message}` }
   }
 
   // Grant ORG_ADMIN role
-  await supabase
+  const { error: roleError } = await supabase
     .from('user_roles')
     .upsert({ user_id: user.id, role: 'ORG_ADMIN' }, { onConflict: 'user_id,role' })
+
+  if (roleError) {
+    // Org access is controlled by organization_members OWNER/MANAGER checks.
+    // Keep UX flow intact even if role sync is temporarily blocked by RLS.
+    console.warn('[createOrganization] ORG_ADMIN role upsert failed:', roleError.message)
+  }
 
   revalidatePath('/org/rosters')
   redirect('/org/rosters')

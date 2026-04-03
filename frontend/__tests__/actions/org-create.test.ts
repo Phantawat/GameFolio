@@ -76,9 +76,7 @@ describe('createOrganization()', () => {
 
     const result = await createOrganization(null, fd)
 
-    expect(result).toEqual({
-      error: 'Organization created but failed to set up membership.',
-    })
+    expect(result.error).toMatch(/Organization created but failed to set up membership/i)
   })
 
   it('5: creates org + membership + ORG_ADMIN role and redirects on full success', async () => {
@@ -118,6 +116,26 @@ describe('createOrganization()', () => {
     fd.append('name', 'Logo Org')
     const blob = new Blob(['content'], { type: 'image/png' })
     fd.append('logo', new File([blob], 'logo.png', { type: 'image/png' }))
+
+    await expect(createOrganization(null, fd)).rejects.toThrow('NEXT_REDIRECT')
+    expect(redirect).toHaveBeenCalledWith('/org/rosters')
+  })
+
+  it('7: still redirects when ORG_ADMIN role upsert fails', async () => {
+    const mockSupabase = makeSupabaseMock({ user: MOCK_USER })
+    // org insert succeeds
+    mockSupabase.from.mockReturnValueOnce(
+      makeChain({ data: { id: 'org-3' }, error: null })
+    )
+    // member insert succeeds
+    mockSupabase.from.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // role upsert fails
+    mockSupabase.from.mockReturnValueOnce(
+      makeChain({ data: null, error: { message: 'rls denied' } })
+    )
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+
+    const fd = toFormData({ name: 'No Role Sync Org' })
 
     await expect(createOrganization(null, fd)).rejects.toThrow('NEXT_REDIRECT')
     expect(redirect).toHaveBeenCalledWith('/org/rosters')

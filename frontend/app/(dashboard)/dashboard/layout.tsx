@@ -18,22 +18,20 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // 2. Check Onboarding Status (Profile Check)
-  // Query player_profiles for the user's ID
+  // 2. Optional profile lookup for personalized navbar
   const { data: profile } = await supabase
     .from('player_profiles')
-    .select('id')
+    .select('gamertag')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  // If no profile exists, send them to onboarding
-  if (!profile) {
-    redirect('/onboarding')
-  }
+  const fallbackName = user.email?.split('@')[0] ?? 'Player'
+  const displayName = profile?.gamertag ?? fallbackName
+  const handle = `@${displayName.toLowerCase().replace(/\s+/g, '')}`
 
   return (
     <div className="min-h-screen bg-[#0F0A09] text-zinc-50 font-sans">
-      <DashboardNavbar />
+      <DashboardNavbar displayName={displayName} handle={handle} />
       <main className="px-6 md:px-8 pt-24 pb-12 max-w-7xl mx-auto min-h-screen space-y-8">
         {children}
       </main>
