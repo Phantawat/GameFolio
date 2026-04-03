@@ -22,16 +22,18 @@ interface ApplyButtonProps {
 export function ApplyButton({ tryoutId, alreadyApplied }: ApplyButtonProps) {
   const [state, action, isPending] = useActionState(applyToTryout, null)
   const [open, setOpen] = useState(false)
+  const [hasApplied, setHasApplied] = useState(false)
 
   useEffect(() => {
     if (state?.error) toast.error(state.error)
     if (state?.success) {
       toast.success(state.success)
+      setHasApplied(true)
       setOpen(false)
     }
   }, [state])
 
-  if (alreadyApplied) {
+  if (alreadyApplied || hasApplied) {
     return (
       <Button
         size="sm"
