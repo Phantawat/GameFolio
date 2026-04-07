@@ -1,16 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import Image from 'next/image'
+import Link from 'next/link'
 
 export function Hero() {
   return (
-    <div className="relative isolate pt-14 flex justify-center items-center min-bg-screen bg-zinc-950 px-4">
+    <div className="relative isolate flex min-h-screen items-center justify-center bg-zinc-950 px-4 pt-14">
       {/* Background gradient effect */}
       <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
         <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff6b2b] to-[#fc4e0d] opacity-10 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
       </div>
 
-      <div className="mx-auto max-w-7xl pt-24 sm:pt-32 lg:pt-40 flex flex-col items-center text-center">
+      <div className="mx-auto flex max-w-7xl flex-col items-center pt-24 text-center sm:pt-32 lg:pt-40">
         {/* Trusted Badge */}
         <div className="mb-8 flex justify-center">
           <Badge variant="outline" className="rounded-full px-4 py-1.5 text-zinc-400 bg-zinc-900/50 backdrop-blur-sm border-zinc-700 hover:bg-zinc-800 transition-colors cursor-default">
@@ -20,24 +20,24 @@ export function Hero() {
         </div>
 
         {/* Hero Text */}
-        <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl max-w-4xl leading-tight">
+        <h1 className="max-w-4xl text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl">
           Your Esports Career <br className="hidden sm:block" />
           <span className="bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent">
             Starts Here.
           </span>
         </h1>
         
-        <p className="mt-6 text-lg leading-8 text-zinc-400 max-w-2xl">
+        <p className="mt-6 max-w-2xl text-base leading-8 text-zinc-400 sm:text-lg">
           The professional network for competitive gamers. Build your resume, showcase your verified stats, and get recruited by top organizations.
         </p>
 
         {/* Buttons */}
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button size="lg" className="rounded-full bg-orange-600 px-8 py-6 text-base font-semibold text-white shadow-md hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">
-            Find a Team &rarr;
+        <div className="mt-10 flex w-full max-w-md flex-col gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center sm:gap-6">
+          <Button asChild size="lg" className="h-14 w-full rounded-full bg-orange-600 px-8 text-base font-semibold text-white shadow-md hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:w-auto">
+            <Link href="/signup">Find a Team &rarr;</Link>
           </Button>
-          <Button variant="outline" size="lg" className="rounded-full border-zinc-700 bg-zinc-900/50 px-8 py-6 text-base font-semibold text-white hover:bg-zinc-800 hover:text-white">
-            Recruit Talent
+          <Button asChild variant="outline" size="lg" className="h-14 w-full rounded-full border-zinc-700 bg-zinc-900/50 px-8 text-base font-semibold text-white hover:bg-zinc-800 hover:text-white sm:w-auto">
+            <Link href="/signup">Recruit Talent</Link>
           </Button>
         </div>
 
