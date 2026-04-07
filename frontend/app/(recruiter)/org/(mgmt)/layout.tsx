@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import OrgNavbar from '@/components/layout/OrgNavbar'
+import OrgMgmtShell from './_components/OrgMgmtShell'
+import type { OrganizationMemberRole } from '@/lib/database.types'
 
 export default async function OrgMgmtLayout({
   children,
@@ -18,29 +19,41 @@ export default async function OrgMgmtLayout({
   // Ensure the user is an owner or manager of some organization
   const { data: membership } = await supabase
     .from('organization_members')
-    .select('organization_id, role')
+    .select('organization_id, role, organizations(name, logo_url)')
     .eq('user_id', user.id)
-    .in('role', ['OWNER', 'MANAGER'])
+    .in('role', ['OWNER', 'MANAGER', 'MEMBER'])
     .maybeSingle()
 
   if (!membership) redirect('/org/create')
 
-  const { data: profile } = await supabase
-    .from('player_profiles')
-    .select('gamertag')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const org = Array.isArray(membership.organizations)
+    ? membership.organizations[0]
+    : membership.organizations
 
-  const fallbackName = user.email?.split('@')[0] ?? 'Recruiter'
-  const displayName = profile?.gamertag ?? fallbackName
-  const handle = `@${displayName.toLowerCase().replace(/\s+/g, '')}`
+  const { data: tryouts } = await supabase
+    .from('tryouts')
+    .select('id')
+    .eq('organization_id', membership.organization_id)
+
+  const tryoutIds = (tryouts ?? []).map((t) => t.id)
+  let applicationCount = 0
+  if (tryoutIds.length > 0) {
+    const { count } = await supabase
+      .from('applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'PENDING')
+      .in('tryout_id', tryoutIds)
+    applicationCount = count ?? 0
+  }
 
   return (
-    <>
-      <OrgNavbar displayName={displayName} handle={handle} />
-      <main className="px-6 md:px-8 pt-24 pb-12 max-w-7xl mx-auto space-y-8">
-        {children}
-      </main>
-    </>
+    <OrgMgmtShell
+      orgName={org?.name ?? 'Organization'}
+      orgLogoUrl={org?.logo_url ?? null}
+      memberRole={(membership.role as OrganizationMemberRole) ?? 'MEMBER'}
+      applicationCount={applicationCount}
+    >
+      {children}
+    </OrgMgmtShell>
   )
 }
