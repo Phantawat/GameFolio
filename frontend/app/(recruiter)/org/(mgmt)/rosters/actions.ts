@@ -70,29 +70,47 @@ export const addRosterMember = createSafeAction(addRosterMemberSchema, async (da
 
   if (!membership) return { error: 'Permission denied.' }
 
-  // Find the player by gamertag
+  // Normalize recruiter input so @Gamertag and casing differences still resolve.
+  const normalizedGamertag = data.gamertag.trim().replace(/^@+/, '')
+
+  // Find the player by gamertag (case-insensitive)
   const { data: profile } = await ctx.supabase
     .from('player_profiles')
-    .select('id')
-    .eq('gamertag', data.gamertag)
+    .select('id, user_id, gamertag')
+    .ilike('gamertag', normalizedGamertag)
+    .limit(1)
     .maybeSingle()
 
-  if (!profile) return { error: `Player "${data.gamertag}" not found.` }
+  if (!profile) {
+    const { data: suggestions } = await ctx.supabase
+      .from('player_profiles')
+      .select('gamertag')
+      .ilike('gamertag', `${normalizedGamertag}%`)
+      .limit(3)
+
+    if (suggestions && suggestions.length > 0) {
+      return {
+        error: `Player not found. Did you mean: ${suggestions.map((s) => s.gamertag).join(', ')}?`,
+      }
+    }
+
+    return { error: `Player "${normalizedGamertag}" not found.` }
+  }
 
   const { error } = await ctx.supabase.from('roster_members').insert({
     roster_id: data.roster_id,
-    player_profile_id: profile.id,
+    user_id: profile.user_id,
     role_in_roster: data.role_in_roster || null,
   })
 
   if (error) {
     if (error.code === '23505') return { error: 'This player is already on this roster.' }
-    return { error: 'Failed to add member. Please try again.' }
+    return { error: `Failed to add member: ${error.message}` }
   }
 
   revalidatePath(`/org/rosters/${data.roster_id}`)
   revalidatePath('/org/rosters')
-  return { success: `${data.gamertag} added to roster!` }
+  return { success: `${profile.gamertag} added to roster!` }
 })
 
 // ─── Remove player from roster ──────────────────────────────────────────────

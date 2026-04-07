@@ -42,17 +42,22 @@ export default async function RosterDetailPage({
   // Fetch roster members with player info
   const { data: members } = await supabase
     .from('roster_members')
-    .select(`
-      id,
-      role_in_roster,
-      joined_at,
-      player_profiles ( id, gamertag, region )
-    `)
+    .select('id, user_id, role_in_roster, joined_at')
     .eq('roster_id', rosterId)
     .order('joined_at', { ascending: true })
 
+  const userIds = (members ?? []).map((m) => m.user_id)
+  const { data: profiles } = userIds.length
+    ? await supabase
+        .from('player_profiles')
+        .select('user_id, gamertag, region')
+        .in('user_id', userIds)
+    : { data: [] as { user_id: string; gamertag: string; region: string | null }[] }
+
+  const profileByUserId = new Map((profiles ?? []).map((p) => [p.user_id, p]))
+
   const memberRows = (members ?? []).map((m) => {
-    const profile = Array.isArray(m.player_profiles) ? m.player_profiles[0] : m.player_profiles
+    const profile = profileByUserId.get(m.user_id)
     return {
       id: m.id,
       gamertag: profile?.gamertag ?? 'Unknown',

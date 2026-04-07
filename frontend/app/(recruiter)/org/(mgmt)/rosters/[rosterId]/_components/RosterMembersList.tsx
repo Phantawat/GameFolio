@@ -39,7 +39,7 @@ function AddMemberForm({ rosterId }: { rosterId: string }) {
           id="gamertag"
           name="gamertag"
           required
-          placeholder="Enter gamertag..."
+          placeholder="Enter gamertag (e.g. ganzanarak or @ganzanarak)..."
           className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:ring-[#FF5C00]/30 focus:border-[#FF5C00]/50"
         />
       </div>
