@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Bell, Menu, Search, Sparkles } from 'lucide-react'
+import { Bell, LogOut, Menu, Search, Sparkles } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { PlayerNavProps } from '@/types/nav'
 import { Input } from '@/components/ui/input'
@@ -32,18 +33,19 @@ function isActivePath(pathname: string, href: string) {
 
 export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = false }: PlayerNavProps) {
   const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
   const initial = gamertag?.trim().charAt(0).toUpperCase() || 'P'
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 border-b border-zinc-800 bg-[#0F0A09]/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 fill-orange-500 text-orange-500" />
             <span className="text-xl font-black tracking-wide text-orange-500">GAMEFOLIO</span>
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-5 xl:flex">
             {playerLinks.map((link) => {
               const active = isActivePath(pathname, link.href)
               return (
@@ -64,8 +66,8 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
           </nav>
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
-          <div className="relative hidden w-64 md:block">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="relative hidden w-64 2xl:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
             <Input
               placeholder="Search tryouts..."
@@ -76,7 +78,7 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
           <button
             type="button"
             aria-label="Notifications"
-            className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            className="hidden rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white md:inline-flex"
           >
             <Bell className="h-5 w-5" />
           </button>
@@ -84,13 +86,23 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
           {canSwitchToOrg && (
             <Link
               href="/dashboard/switch-mode?mode=org&next=%2Forg%2Frosters"
-              className="hidden rounded-full border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white md:inline-flex"
+              className="hidden rounded-full border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white lg:inline-flex"
             >
               Org View
             </Link>
           )}
 
-          <div className="hidden items-center gap-2 md:flex">
+          <form action="/auth/signout" method="post" className="hidden lg:block">
+            <button
+              type="submit"
+              aria-label="Sign out"
+              className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </form>
+
+          <div className="hidden items-center gap-2 lg:flex">
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
@@ -111,12 +123,12 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
             </span>
           </div>
 
-          <Sheet>
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <button
                 type="button"
                 aria-label="Open navigation menu"
-                className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white md:hidden"
+                className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white xl:hidden"
               >
                 <Menu className="h-5 w-5" />
               </button>
@@ -125,13 +137,22 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
               <SheetHeader>
                 <SheetTitle>Player Menu</SheetTitle>
               </SheetHeader>
-              <div className="mt-6 space-y-3">
+              <div className="mt-6 space-y-4">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                  <Input
+                    placeholder="Search tryouts..."
+                    className="h-10 rounded-full border-zinc-800 bg-zinc-900/50 pl-10 text-zinc-300 placeholder:text-zinc-600"
+                  />
+                </div>
+
                 {playerLinks.map((link) => {
                   const active = isActivePath(pathname, link.href)
                   return (
                     <Link
                       key={link.href}
                       href={link.href}
+                      onClick={() => setMobileOpen(false)}
                       className={cn(
                         'block rounded-md border border-transparent px-3 py-2 text-sm',
                         active
@@ -147,11 +168,22 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
                 {canSwitchToOrg && (
                   <Link
                     href="/dashboard/switch-mode?mode=org&next=%2Forg%2Frosters"
+                    onClick={() => setMobileOpen(false)}
                     className="block rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
                   >
                     Switch to Org View
                   </Link>
                 )}
+
+                <form action="/auth/signout" method="post">
+                  <button
+                    type="submit"
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </form>
               </div>
             </SheetContent>
           </Sheet>

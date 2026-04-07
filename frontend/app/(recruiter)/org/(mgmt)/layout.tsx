@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import OrgMgmtShell from './_components/OrgMgmtShell'
 import type { OrganizationMemberRole } from '@/lib/database.types'
 
@@ -15,6 +16,21 @@ export default async function OrgMgmtLayout({
   } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
+
+  const cookieStore = await cookies()
+  const preferredMode = cookieStore.get('gf_nav_mode')?.value
+
+  const { data: playerProfile } = await supabase
+    .from('player_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const canSwitchToPlayer = Boolean(playerProfile)
+
+  if (preferredMode === 'player' && canSwitchToPlayer) {
+    redirect('/dashboard/player')
+  }
 
   // Ensure the user is an owner or manager of some organization
   const { data: membership } = await supabase
@@ -52,6 +68,7 @@ export default async function OrgMgmtLayout({
       orgLogoUrl={org?.logo_url ?? null}
       memberRole={(membership.role as OrganizationMemberRole) ?? 'MEMBER'}
       applicationCount={applicationCount}
+      canSwitchToPlayer={canSwitchToPlayer}
     >
       {children}
     </OrgMgmtShell>
