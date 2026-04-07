@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getPlayerProfile, getPlayerGameStats } from '@/lib/queries'
+import { getPlayerProfile, getPlayerGameStats, getPlayerHighlights } from '@/lib/queries'
 import { ProfileHeader } from './_components/ProfileHeader'
 import { GameStats } from './_components/GameStats'
 import { Hardware } from './_components/Hardware'
@@ -14,6 +14,7 @@ export default async function PlayerProfilePage() {
   if (!profile) redirect('/dashboard')
 
   const stats = await getPlayerGameStats(profile.id)
+  const highlights = await getPlayerHighlights(profile.id)
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
@@ -26,14 +27,14 @@ export default async function PlayerProfilePage() {
         {/* Left Column: Stats & Hardware */}
         <div className="space-y-6">
           <GameStats stats={stats} />
-          <Hardware />
+          <Hardware value={profile.hardware_details} />
         </div>
 
         {/* Right Column: About, Experience, VODs */}
         <div className="md:col-span-2 space-y-6">
           <ProfileDetailsForm gamertag={profile.gamertag} region={profile.region} bio={profile.bio} />
-          <Experience />
-          <Vods />
+          <Experience value={profile.competitive_experience} />
+          <Vods highlights={highlights} />
         </div>
       </div>
     </div>

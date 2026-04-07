@@ -25,6 +25,14 @@ export type GameStatWithRelations = {
   main_role: { role_name: string } | null
 }
 
+export type PlayerHighlightRow = {
+  id: string
+  title: string
+  video_url: string
+  duration_seconds: number
+  created_at: string
+}
+
 // ─── Player profile (cached per request) ─────────────────────────────────────
 
 /**
@@ -42,7 +50,9 @@ export const getPlayerProfile = cache(async (): Promise<PlayerProfileRow | null>
 
   const { data, error } = await supabase
     .from('player_profiles')
-    .select('id, user_id, gamertag, bio, region, created_at, updated_at')
+    .select(
+      'id, user_id, gamertag, bio, region, competitive_experience, hardware_details, created_at, updated_at'
+    )
     .eq('user_id', user.id)
     .single()
 
@@ -162,3 +172,24 @@ export const getPlayerApplications = cache(async (playerProfileId: string) => {
 
   return data ?? []
 })
+
+// ─── Highlights (cached per request) ────────────────────────────────────────
+
+export const getPlayerHighlights = cache(
+  async (playerProfileId: string): Promise<PlayerHighlightRow[]> => {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('player_highlights')
+      .select('id, title, video_url, duration_seconds, created_at')
+      .eq('player_profile_id', playerProfileId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('[getPlayerHighlights] error:', error.message)
+      return []
+    }
+
+    return data ?? []
+  }
+)

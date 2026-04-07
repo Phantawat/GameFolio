@@ -1,73 +1,148 @@
+'use client'
+
+import { useActionState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2, Save } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { updateCompetitiveExperience } from '../actions'
 
-export function Experience() {
-  return (
-    <Card className="bg-[#140C0B] border-zinc-800 text-zinc-100 shadow-sm relative overflow-hidden group hover:border-zinc-700 transition-colors">
-        <CardHeader className="pb-8">
-            <CardTitle className="text-lg font-bold text-white tracking-wide border-l-4 border-orange-500 pl-4 py-1">Competitive Experience</CardTitle>
-        </CardHeader>
-        <CardContent className="relative pl-8 space-y-12">
-             {/* Vertical Line */}
-             <div className="absolute left-[39px] top-2 bottom-8 w-px bg-zinc-800 group-hover:bg-zinc-700 transition-colors"></div>
+type ExperienceProps = {
+    value?: string | null
+}
 
-             {/* Experience Item 1 */}
-             <div className="relative pl-10">
-                  {/* Dot */}
-                  <div className="absolute -left-[5px] top-1.5 w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(255,92,0,0.6)] z-10 border-2 border-[#140C0B]"></div>
-                  
-                  <div className="flex flex-col sm:flex-row justify-between items-start mb-3 gap-2">
-                        <div>
-                            <h3 className="text-xl font-bold text-white">Apex Vanguard</h3>
-                            <p className="text-[#FF5C00] font-bold text-sm mt-0.5">Lead Duelist / IGL</p>
+type ExperienceData = {
+    year: string
+    role: string
+    game: string
+    team: string
+    highlights: string
+}
+
+function parseExperience(value?: string | null): ExperienceData {
+    const empty: ExperienceData = {
+        year: '',
+        role: '',
+        game: '',
+        team: '',
+        highlights: '',
+    }
+
+    if (!value) return empty
+
+    try {
+        const parsed = JSON.parse(value) as Partial<ExperienceData>
+        return {
+            year: parsed.year ?? '',
+            role: parsed.role ?? '',
+            game: parsed.game ?? '',
+            team: parsed.team ?? '',
+            highlights: parsed.highlights ?? '',
+        }
+    } catch {
+        return {
+            ...empty,
+            highlights: value,
+        }
+    }
+}
+
+export function Experience({ value }: ExperienceProps) {
+    const [state, formAction, isPending] = useActionState(updateCompetitiveExperience, null)
+    const initial = parseExperience(value)
+
+    useEffect(() => {
+        if (state?.error) toast.error(state.error)
+        if (state?.success) toast.success(state.success)
+    }, [state])
+
+    return (
+        <Card className="bg-[#140C0B] border-zinc-800 text-zinc-100 shadow-sm hover:border-zinc-700 transition-colors">
+            <CardHeader>
+                <CardTitle className="text-lg font-bold text-white tracking-wide border-l-4 border-orange-500 pl-4 py-1">
+                    Competitive Experience
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form action={formAction} className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="exp-year" className="text-xs uppercase tracking-wide text-zinc-400">
+                                Year
+                            </Label>
+                            <Input
+                                id="exp-year"
+                                name="year"
+                                required
+                                defaultValue={initial.year}
+                                placeholder="2024 - Present"
+                                className="bg-[#0F0A09] border-zinc-700 text-zinc-100"
+                            />
                         </div>
-                        <span className="text-xs text-zinc-500 font-medium bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">2023 - Present</span>
-                  </div>
-                  
-                  <ul className="space-y-2 mt-4">
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-orange-500/50 transition-colors"></span>
-                          <span className="leading-relaxed">Qualified for VCT Challengers Stage 2 Open Qualifiers</span>
-                      </li>
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-orange-500/50 transition-colors"></span>
-                          <span className="leading-relaxed">Maintained average ACS of 245 across official tournament matches</span>
-                      </li>
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-orange-500/50 transition-colors"></span>
-                          <span className="leading-relaxed">Orchestrated mid-round rotations and utility combos for the squad</span>
-                      </li>
-                  </ul>
-             </div>
-
-             {/* Experience Item 2 */}
-             <div className="relative pl-10 opacity-80 hover:opacity-100 transition-opacity duration-300">
-                  {/* Dot (Gray) */}
-                  <div className="absolute -left-[5px] top-1.5 w-3 h-3 rounded-full bg-zinc-600 z-10 border-2 border-[#140C0B]"></div>
-                  
-                  <div className="flex flex-col sm:flex-row justify-between items-start mb-3 gap-2">
-                        <div>
-                            <h3 className="text-xl font-bold text-white">Project Zero</h3>
-                            <p className="text-[#FF5C00] font-bold text-sm mt-0.5">Initiator / Support</p>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="exp-role" className="text-xs uppercase tracking-wide text-zinc-400">
+                                Role
+                            </Label>
+                            <Input
+                                id="exp-role"
+                                name="role"
+                                required
+                                defaultValue={initial.role}
+                                placeholder="IGL / Duelist"
+                                className="bg-[#0F0A09] border-zinc-700 text-zinc-100"
+                            />
                         </div>
-                        <span className="text-xs text-zinc-500 font-medium bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">2022 - 2023</span>
-                  </div>
-                  
-                  <ul className="space-y-2 mt-4">
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-zinc-500 transition-colors"></span>
-                          Top 8 finish in the SEA Community Invitational
-                      </li>
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-zinc-500 transition-colors"></span>
-                          Specialized in Sova and Fade utility lineups for site retakes
-                      </li>
-                      <li className="flex items-start gap-3 text-sm text-zinc-400 group/item hover:text-zinc-300 transition-colors">
-                          <span className="w-1.5 h-1.5 bg-zinc-600 rounded-full mt-2 shrink-0 group-hover/item:bg-zinc-500 transition-colors"></span>
-                          Coordinated team practice schedules and VOD review sessions
-                      </li>
-                  </ul>
-             </div>
-        </CardContent>
-    </Card>
-  )
+                        <div className="space-y-1.5">
+                            <Label htmlFor="exp-game" className="text-xs uppercase tracking-wide text-zinc-400">
+                                Game
+                            </Label>
+                            <Input
+                                id="exp-game"
+                                name="game"
+                                required
+                                defaultValue={initial.game}
+                                placeholder="Valorant"
+                                className="bg-[#0F0A09] border-zinc-700 text-zinc-100"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="exp-team" className="text-xs uppercase tracking-wide text-zinc-400">
+                            Team
+                        </Label>
+                        <Input
+                            id="exp-team"
+                            name="team"
+                            defaultValue={initial.team}
+                            placeholder="Apex Vanguard"
+                            className="bg-[#0F0A09] border-zinc-700 text-zinc-100"
+                        />
+                    </div>
+
+                    <textarea
+                        name="highlights"
+                        defaultValue={initial.highlights}
+                        rows={5}
+                        placeholder="Add achievements, tournament placements, and key results..."
+                        className="w-full rounded-lg border border-zinc-700 bg-[#0F0A09] px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50"
+                    />
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isPending} className="bg-[#FF5C00] hover:bg-orange-600 text-white">
+                            {isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Save Experience
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    )
 }

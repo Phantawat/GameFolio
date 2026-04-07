@@ -72,6 +72,8 @@ export interface Database {
           gamertag: string
           bio: string | null
           region: string | null
+          competitive_experience: string | null
+          hardware_details: string | null
           created_at: string
           updated_at: string
         }
@@ -81,6 +83,8 @@ export interface Database {
           gamertag: string
           bio?: string | null
           region?: string | null
+          competitive_experience?: string | null
+          hardware_details?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -90,6 +94,8 @@ export interface Database {
           gamertag?: string
           bio?: string | null
           region?: string | null
+          competitive_experience?: string | null
+          hardware_details?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -246,6 +252,41 @@ export interface Database {
             columns: ['sub_role_id']
             isOneToOne: false
             referencedRelation: 'game_roles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      player_highlights: {
+        Row: {
+          id: string
+          player_profile_id: string
+          title: string
+          video_url: string
+          duration_seconds: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          player_profile_id: string
+          title: string
+          video_url: string
+          duration_seconds: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          player_profile_id?: string
+          title?: string
+          video_url?: string
+          duration_seconds?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'player_highlights_player_profile_id_fkey'
+            columns: ['player_profile_id']
+            isOneToOne: false
+            referencedRelation: 'player_profiles'
             referencedColumns: ['id']
           }
         ]

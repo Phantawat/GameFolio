@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createSafeAction } from '@/lib/safe-action'
+import type { ActionResult } from '@/lib/safe-action'
+import { createClient } from '@/lib/supabase/server'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -20,6 +22,37 @@ const playerProfileSchema = z.object({
   gamertag: z.string().trim().min(2, 'Gamertag must be at least 2 characters').max(32),
   region: z.string().trim().max(32).optional().or(z.literal('')),
   bio: z.string().trim().max(500, 'Bio must be 500 characters or fewer').optional().or(z.literal('')),
+})
+
+const playerExtrasSchema = z.object({
+  competitive_experience: z
+    .string()
+    .trim()
+    .max(3000, 'Competitive experience must be 3000 characters or fewer')
+    .optional()
+    .or(z.literal('')),
+  hardware_details: z
+    .string()
+    .trim()
+    .max(2000, 'Hardware details must be 2000 characters or fewer')
+    .optional()
+    .or(z.literal('')),
+})
+
+const hardwareDetailsSchema = z.object({
+  mouse: z.string().trim().max(120).optional().or(z.literal('')),
+  keyboard: z.string().trim().max(120).optional().or(z.literal('')),
+  mousepad: z.string().trim().max(120).optional().or(z.literal('')),
+  headset: z.string().trim().max(120).optional().or(z.literal('')),
+  monitor: z.string().trim().max(120).optional().or(z.literal('')),
+})
+
+const competitiveExperienceStructuredSchema = z.object({
+  year: z.string().trim().max(40, 'Year range is too long'),
+  role: z.string().trim().max(80, 'Role is too long'),
+  game: z.string().trim().max(80, 'Game name is too long'),
+  team: z.string().trim().max(120).optional().or(z.literal('')),
+  highlights: z.string().trim().max(1000).optional().or(z.literal('')),
 })
 
 // ─── Action ───────────────────────────────────────────────────────────────────
@@ -92,4 +125,241 @@ export const updatePlayerProfile = createSafeAction(playerProfileSchema, async (
 
   revalidatePath('/dashboard/player')
   return { success: 'Profile updated successfully.' }
+})
+
+export const updatePlayerExtras = createSafeAction(playerExtrasSchema, async (data, ctx) => {
+  const { data: profile } = await ctx.supabase
+    .from('player_profiles')
+    .select('id')
+    .eq('user_id', ctx.user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return { error: 'Player profile not found. Please complete onboarding first.' }
+  }
+
+  const { error } = await ctx.supabase
+    .from('player_profiles')
+    .update({
+      competitive_experience: data.competitive_experience ? data.competitive_experience : null,
+      hardware_details: data.hardware_details ? data.hardware_details : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id)
+
+  if (error) {
+    return { error: 'Failed to update player details. Please try again.' }
+  }
+
+  revalidatePath('/dashboard/player')
+  return { success: 'Experience and hardware updated.' }
+})
+
+export const updateHardwareDetails = createSafeAction(hardwareDetailsSchema, async (data, ctx) => {
+  const { data: profile } = await ctx.supabase
+    .from('player_profiles')
+    .select('id')
+    .eq('user_id', ctx.user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return { error: 'Player profile not found. Please complete onboarding first.' }
+  }
+
+  const payload = {
+    mouse: data.mouse || '',
+    keyboard: data.keyboard || '',
+    mousepad: data.mousepad || '',
+    headset: data.headset || '',
+    monitor: data.monitor || '',
+  }
+
+  const hasAtLeastOneField = Object.values(payload).some((v) => v.trim().length > 0)
+  if (!hasAtLeastOneField) {
+    return { error: 'Please provide at least one hardware field.' }
+  }
+
+  const { error } = await ctx.supabase
+    .from('player_profiles')
+    .update({
+      hardware_details: JSON.stringify(payload),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id)
+
+  if (error) {
+    return { error: 'Failed to update hardware details. Please try again.' }
+  }
+
+  revalidatePath('/dashboard/player')
+  return { success: 'Hardware details updated.' }
+})
+
+export const updateCompetitiveExperience = createSafeAction(
+  competitiveExperienceStructuredSchema,
+  async (data, ctx) => {
+    const { data: profile } = await ctx.supabase
+      .from('player_profiles')
+      .select('id')
+      .eq('user_id', ctx.user.id)
+      .maybeSingle()
+
+    if (!profile) {
+      return { error: 'Player profile not found. Please complete onboarding first.' }
+    }
+
+    if (!data.year || !data.role || !data.game) {
+      return { error: 'Year, role, and game are required.' }
+    }
+
+    const payload = {
+      year: data.year,
+      role: data.role,
+      game: data.game,
+      team: data.team || '',
+      highlights: data.highlights || '',
+    }
+
+    const { error } = await ctx.supabase
+      .from('player_profiles')
+      .update({
+        competitive_experience: JSON.stringify(payload),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id)
+
+    if (error) {
+      return { error: 'Failed to update competitive experience. Please try again.' }
+    }
+
+    revalidatePath('/dashboard/player')
+    return { success: 'Competitive experience updated.' }
+  }
+)
+
+export async function uploadPlayerHighlight(
+  _prevState: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'You must be logged in to upload highlights.' }
+  }
+
+  const title = String(formData.get('title') ?? '').trim()
+  const file = formData.get('video') as File | null
+  const durationRaw = Number(formData.get('duration_seconds') ?? 0)
+  const durationSeconds = Number.isFinite(durationRaw) ? Math.round(durationRaw) : 0
+
+  if (title.length < 3) {
+    return { error: 'Highlight title must be at least 3 characters.' }
+  }
+
+  if (!file || file.size === 0) {
+    return { error: 'Please choose a video file to upload.' }
+  }
+
+  if (!file.type.startsWith('video/')) {
+    return { error: 'Only video files are allowed.' }
+  }
+
+  if (durationSeconds <= 0 || durationSeconds > 120) {
+    return { error: 'Video must be shorter than 2 minutes.' }
+  }
+
+  // Keep uploads light for MVP and faster page loads.
+  if (file.size > 50 * 1024 * 1024) {
+    return { error: 'Video file is too large. Max size is 50MB.' }
+  }
+
+  const { data: profile } = await supabase
+    .from('player_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return { error: 'Player profile not found. Please complete onboarding first.' }
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4'
+  const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('player_highlights')
+    .upload(path, file, { upsert: false })
+
+  if (uploadError) {
+    return { error: 'Failed to upload video. Please try again.' }
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('player_highlights').getPublicUrl(path)
+
+  const { error: insertError } = await supabase.from('player_highlights').insert({
+    player_profile_id: profile.id,
+    title,
+    video_url: publicUrl,
+    duration_seconds: durationSeconds,
+  })
+
+  if (insertError) {
+    return { error: 'Video uploaded but saving highlight failed. Please try again.' }
+  }
+
+  revalidatePath('/dashboard/player')
+  return { success: 'Highlight uploaded successfully.' }
+}
+
+const deleteHighlightSchema = z.object({
+  highlight_id: z.string().uuid('Invalid highlight id.'),
+})
+
+export const deletePlayerHighlight = createSafeAction(deleteHighlightSchema, async (data, ctx) => {
+  const { data: profile } = await ctx.supabase
+    .from('player_profiles')
+    .select('id')
+    .eq('user_id', ctx.user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return { error: 'Player profile not found. Please complete onboarding first.' }
+  }
+
+  const { data: highlight } = await ctx.supabase
+    .from('player_highlights')
+    .select('id, video_url')
+    .eq('id', data.highlight_id)
+    .eq('player_profile_id', profile.id)
+    .maybeSingle()
+
+  if (!highlight) {
+    return { error: 'Highlight not found.' }
+  }
+
+  const url = highlight.video_url
+  const marker = '/storage/v1/object/public/player_highlights/'
+  const index = url.indexOf(marker)
+  const objectPath = index >= 0 ? url.slice(index + marker.length) : null
+
+  if (objectPath) {
+    await ctx.supabase.storage.from('player_highlights').remove([objectPath])
+  }
+
+  const { error } = await ctx.supabase
+    .from('player_highlights')
+    .delete()
+    .eq('id', highlight.id)
+
+  if (error) {
+    return { error: 'Failed to delete highlight. Please try again.' }
+  }
+
+  revalidatePath('/dashboard/player')
+  return { success: 'Highlight deleted.' }
 })
