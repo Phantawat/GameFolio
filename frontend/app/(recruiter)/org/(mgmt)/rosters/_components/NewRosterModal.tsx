@@ -32,6 +32,9 @@ export default function NewRosterModal({
 }: NewRosterModalProps) {
   const [open, setOpen] = useState(false)
   const [state, formAction, isPending] = useActionState(createRoster, null)
+  const dialogId = `roster-dialog-${orgId}-${variant}`
+  const dialogTitleId = `${dialogId}-title`
+  const dialogDescriptionId = `${dialogId}-description`
 
   useEffect(() => {
     if (state?.success) {
@@ -58,10 +61,18 @@ export default function NewRosterModal({
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-md">
+      <DialogContent
+        id={dialogId}
+        aria-labelledby={dialogTitleId}
+        aria-describedby={dialogDescriptionId}
+        className="max-w-md"
+      >
+        <DialogTitle className="sr-only">Add New Team Roster</DialogTitle>
         <DialogHeader>
-          <DialogTitle>Add New Team Roster</DialogTitle>
-          <DialogDescription>Create a new organizational unit for your players.</DialogDescription>
+          <DialogTitle id={dialogTitleId}>Add New Team Roster</DialogTitle>
+          <DialogDescription id={dialogDescriptionId}>
+            Create a new organizational unit for your players.
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4 mt-2">
