@@ -3,7 +3,7 @@ import { getPlayerProfile, getPlayerGameStats } from '@/lib/queries'
 import { ProfileHeader } from './_components/ProfileHeader'
 import { GameStats } from './_components/GameStats'
 import { Hardware } from './_components/Hardware'
-import { AboutMe } from './_components/AboutMe'
+import { ProfileDetailsForm } from './_components/ProfileDetailsForm'
 import { Experience } from './_components/Experience'
 import { Vods } from './_components/Vods'
 
@@ -31,7 +31,7 @@ export default async function PlayerProfilePage() {
 
         {/* Right Column: About, Experience, VODs */}
         <div className="md:col-span-2 space-y-6">
-          <AboutMe bio={profile.bio} />
+          <ProfileDetailsForm gamertag={profile.gamertag} region={profile.region} bio={profile.bio} />
           <Experience />
           <Vods />
         </div>
