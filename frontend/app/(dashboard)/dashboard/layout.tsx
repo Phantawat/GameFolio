@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import PlayerNavbar from '@/components/layout/PlayerNavbar'
 import OrgNavbar from '@/components/layout/OrgNavbar'
 import type { OrganizationMemberRole, UserRoleType } from '@/lib/database.types'
@@ -26,11 +27,15 @@ export default async function DashboardLayout({
     .eq('user_id', user.id)
 
   const roles = (roleRows ?? []).map((row) => row.role) as UserRoleType[]
+  const hasPlayerRole = roles.includes('PLAYER')
   const hasOrgRole = roles.includes('ORG_ADMIN') || roles.includes('ORG_MEMBER')
+  const cookieStore = await cookies()
+  const preferredMode = cookieStore.get('gf_nav_mode')?.value
+  const preferPlayer = preferredMode === 'player'
 
   let navbar: React.ReactNode
 
-  if (hasOrgRole) {
+  if (hasOrgRole && !preferPlayer) {
     const { data: membership } = await supabase
       .from('organization_members')
       .select('organization_id, role, organizations(name, logo_url)')
@@ -69,6 +74,7 @@ export default async function DashboardLayout({
           orgLogoUrl={org?.logo_url ?? null}
           memberRole={(membership.role as OrganizationMemberRole) ?? 'MEMBER'}
           applicationCount={applicationCount}
+          canSwitchToPlayer={hasPlayerRole}
         />
       )
     } else {
@@ -79,7 +85,13 @@ export default async function DashboardLayout({
         .maybeSingle()
 
       const fallbackName = user.email?.split('@')[0] ?? 'Player'
-      navbar = <PlayerNavbar gamertag={profile?.gamertag ?? fallbackName} avatarUrl={null} />
+      navbar = (
+        <PlayerNavbar
+          gamertag={profile?.gamertag ?? fallbackName}
+          avatarUrl={null}
+          canSwitchToOrg={hasOrgRole}
+        />
+      )
     }
   } else {
     const { data: profile } = await supabase
@@ -89,7 +101,13 @@ export default async function DashboardLayout({
       .maybeSingle()
 
     const fallbackName = user.email?.split('@')[0] ?? 'Player'
-    navbar = <PlayerNavbar gamertag={profile?.gamertag ?? fallbackName} avatarUrl={null} />
+    navbar = (
+      <PlayerNavbar
+        gamertag={profile?.gamertag ?? fallbackName}
+        avatarUrl={null}
+        canSwitchToOrg={hasOrgRole}
+      />
+    )
   }
 
   return (
