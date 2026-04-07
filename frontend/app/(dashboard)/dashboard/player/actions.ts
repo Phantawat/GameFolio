@@ -48,11 +48,15 @@ const hardwareDetailsSchema = z.object({
 })
 
 const competitiveExperienceStructuredSchema = z.object({
-  year: z.string().trim().max(40, 'Year range is too long'),
-  role: z.string().trim().max(80, 'Role is too long'),
-  game: z.string().trim().max(80, 'Game name is too long'),
-  team: z.string().trim().max(120).optional().or(z.literal('')),
-  highlights: z.string().trim().max(1000).optional().or(z.literal('')),
+  experiences_json: z.string().min(2, 'Please add at least one experience.'),
+})
+
+const experienceEntrySchema = z.object({
+  year: z.string().trim().min(1, 'Year is required').max(40, 'Year range is too long'),
+  role: z.string().trim().min(1, 'Role is required').max(80, 'Role is too long'),
+  game: z.string().trim().min(1, 'Game is required').max(80, 'Game name is too long'),
+  team: z.string().trim().max(120).optional().default(''),
+  highlights: z.string().trim().max(1000).optional().default(''),
 })
 
 // ─── Action ───────────────────────────────────────────────────────────────────
@@ -208,22 +212,28 @@ export const updateCompetitiveExperience = createSafeAction(
       return { error: 'Player profile not found. Please complete onboarding first.' }
     }
 
-    if (!data.year || !data.role || !data.game) {
-      return { error: 'Year, role, and game are required.' }
+    let parsedEntries: unknown
+    try {
+      parsedEntries = JSON.parse(data.experiences_json)
+    } catch {
+      return { error: 'Invalid experience data format.' }
     }
 
-    const payload = {
-      year: data.year,
-      role: data.role,
-      game: data.game,
-      team: data.team || '',
-      highlights: data.highlights || '',
+    const entriesSchema = z
+      .array(experienceEntrySchema)
+      .min(1, 'Please add at least one experience.')
+      .max(10, 'Maximum 10 experiences allowed.')
+
+    const parsed = entriesSchema.safeParse(parsedEntries)
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues[0]
+      return { error: firstIssue?.message ?? 'Invalid experience entry.' }
     }
 
     const { error } = await ctx.supabase
       .from('player_profiles')
       .update({
-        competitive_experience: JSON.stringify(payload),
+        competitive_experience: JSON.stringify(parsed.data),
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile.id)
