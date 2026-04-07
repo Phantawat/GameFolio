@@ -2,10 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Bell, LogOut, Menu, Search, Sparkles } from 'lucide-react'
+import { Bell, Menu, Search, Sparkles } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import type { OrgNavProps } from '@/types/nav'
+import type { PlayerNavProps } from '@/types/nav'
 import { Input } from '@/components/ui/input'
 import {
   Sheet,
@@ -15,12 +15,11 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
-const orgLinks = [
+const playerLinks = [
   { label: 'Dashboard', href: '/dashboard' },
-  { label: 'My Tryouts', href: '/org/tryouts' },
-  { label: 'Applications', href: '/org/applications', key: 'applications' as const },
-  { label: 'Roster', href: '/org/rosters' },
-  { label: 'Org Settings', href: '/dashboard/settings' },
+  { label: 'Browse Tryouts', href: '/dashboard/tryouts' },
+  { label: 'My Applications', href: '/dashboard/applications' },
+  { label: 'My Profile', href: '/dashboard/player' },
 ]
 
 function isActivePath(pathname: string, href: string) {
@@ -31,52 +30,34 @@ function isActivePath(pathname: string, href: string) {
   return pathname.startsWith(href)
 }
 
-function roleBadgeClasses(memberRole: OrgNavProps['memberRole']) {
-  if (memberRole === 'OWNER') return 'bg-[#FF5C00]/20 text-[#FF5C00] border border-[#FF5C00]/40'
-  if (memberRole === 'MANAGER') return 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-  return 'bg-zinc-700 text-zinc-400 border border-zinc-600'
-}
-
-export default function OrgNavbar({
-  orgName,
-  orgLogoUrl,
-  memberRole,
-  applicationCount = 0,
-  canSwitchToPlayer = true,
-}: OrgNavProps) {
+export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = false }: PlayerNavProps) {
   const pathname = usePathname()
-  const initial = orgName?.trim().charAt(0).toUpperCase() || 'O'
+  const initial = gamertag?.trim().charAt(0).toUpperCase() || 'P'
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 border-b border-zinc-800 bg-[#0F0A09]/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link href="/org/rosters" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 fill-orange-500 text-orange-500" />
             <span className="text-xl font-black tracking-wide text-orange-500">GAMEFOLIO</span>
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            {orgLinks.map((link) => {
+            {playerLinks.map((link) => {
               const active = isActivePath(pathname, link.href)
-
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'relative border-b-2 border-transparent pb-1 text-sm transition-colors',
+                    'border-b-2 border-transparent pb-1 text-sm transition-colors',
                     active
                       ? 'border-[#FF5C00] text-white'
                       : 'text-zinc-400 hover:text-white'
                   )}
                 >
                   {link.label}
-                  {link.key === 'applications' && applicationCount > 0 && (
-                    <span className="absolute -right-5 -top-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#FF5C00] px-1 text-[11px] font-bold text-white">
-                      {applicationCount}
-                    </span>
-                  )}
                 </Link>
               )
             })}
@@ -100,43 +81,33 @@ export default function OrgNavbar({
             <Bell className="h-5 w-5" />
           </button>
 
-          {canSwitchToPlayer && (
+          {canSwitchToOrg && (
             <Link
-              href="/dashboard/switch-mode?mode=player&next=%2Fdashboard%2Fplayer"
+              href="/dashboard/switch-mode?mode=org&next=%2Forg%2Frosters"
               className="hidden rounded-full border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white md:inline-flex"
             >
-              Player View
+              Org View
             </Link>
           )}
 
-          <form action="/auth/signout" method="post" className="hidden md:block">
-            <button
-              type="submit"
-              aria-label="Sign out"
-              className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </form>
-
           <div className="hidden items-center gap-2 md:flex">
-            {orgLogoUrl ? (
+            {avatarUrl ? (
               <Image
-                src={orgLogoUrl}
-                alt={`${orgName} logo`}
+                src={avatarUrl}
+                alt={`${gamertag} avatar`}
                 width={34}
                 height={34}
                 className="h-[34px] w-[34px] rounded-full border border-zinc-700 object-cover"
               />
             ) : (
-              <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-orange-900/30 text-sm font-bold text-[#FF5C00]">
+              <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-zinc-800 text-sm font-bold text-zinc-300">
                 {initial}
               </span>
             )}
 
-            <span className="text-[14px] font-bold text-white">{orgName}</span>
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', roleBadgeClasses(memberRole))}>
-              {memberRole}
+            <span className="text-[14px] text-zinc-300">{gamertag}</span>
+            <span className="rounded-full border border-zinc-600 bg-zinc-700 px-2 py-0.5 text-[11px] font-semibold text-zinc-400">
+              PLAYER
             </span>
           </div>
 
@@ -152,52 +123,35 @@ export default function OrgNavbar({
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Organization Menu</SheetTitle>
+                <SheetTitle>Player Menu</SheetTitle>
               </SheetHeader>
-
               <div className="mt-6 space-y-3">
-                {orgLinks.map((link) => {
+                {playerLinks.map((link) => {
                   const active = isActivePath(pathname, link.href)
-
                   return (
                     <Link
                       key={link.href}
                       href={link.href}
                       className={cn(
-                        'flex items-center justify-between rounded-md border border-transparent px-3 py-2 text-sm',
+                        'block rounded-md border border-transparent px-3 py-2 text-sm',
                         active
                           ? 'border-[#FF5C00]/40 bg-[#FF5C00]/10 text-white'
                           : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                       )}
                     >
-                      <span>{link.label}</span>
-                      {link.key === 'applications' && applicationCount > 0 && (
-                        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#FF5C00] px-1 text-[11px] font-bold text-white">
-                          {applicationCount}
-                        </span>
-                      )}
+                      {link.label}
                     </Link>
                   )
                 })}
 
-                {canSwitchToPlayer && (
+                {canSwitchToOrg && (
                   <Link
-                    href="/dashboard/switch-mode?mode=player&next=%2Fdashboard%2Fplayer"
-                    className="flex items-center justify-between rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                    href="/dashboard/switch-mode?mode=org&next=%2Forg%2Frosters"
+                    className="block rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
                   >
-                    <span>Switch to Player View</span>
+                    Switch to Org View
                   </Link>
                 )}
-
-                <form action="/auth/signout" method="post" className="pt-2">
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-md border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </form>
               </div>
             </SheetContent>
           </Sheet>

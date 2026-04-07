@@ -31,7 +31,7 @@ export default async function DashboardLayout({
   const hasOrgRole = roles.includes('ORG_ADMIN') || roles.includes('ORG_MEMBER')
   const cookieStore = await cookies()
   const preferredMode = cookieStore.get('gf_nav_mode')?.value
-  const preferPlayer = preferredMode === 'player'
+  const preferPlayer = preferredMode === 'player' && hasPlayerRole
 
   let navbar: React.ReactNode
 
