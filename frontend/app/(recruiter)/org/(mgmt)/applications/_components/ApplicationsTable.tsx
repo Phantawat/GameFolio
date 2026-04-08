@@ -229,10 +229,10 @@ export default function ApplicationsTable({
                         <div>
                           <p className="text-sm font-bold text-white">{app.gamertag}</p>
                           <Link
-                            href={`/dashboard/player`}
+                            href={`/org/applications/${app.id}/profile`}
                             className="text-xs text-zinc-500 hover:text-orange-400 transition-colors"
                           >
-                            View Public Resume
+                            View Player Resume
                           </Link>
                         </div>
                       </div>
