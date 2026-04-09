@@ -26,13 +26,21 @@ export default async function DashboardLayout({
     .select('role')
     .eq('user_id', user.id)
 
+  const { data: playerProfile } = await supabase
+    .from('player_profiles')
+    .select('gamertag')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
   const roles = (roleRows ?? []).map((row) => row.role) as UserRoleType[]
   const hasPlayerRole = roles.includes('PLAYER')
+  const hasPlayerProfile = Boolean(playerProfile)
   const hasOrgRole = roles.includes('ORG_ADMIN') || roles.includes('ORG_MEMBER')
   const hasAdminRole = roles.includes('PLATFORM_ADMIN')
   const cookieStore = await cookies()
   const preferredMode = cookieStore.get('gf_nav_mode')?.value
-  const preferPlayer = preferredMode === 'player' && hasPlayerRole
+  const canUsePlayerMode = hasPlayerRole || hasPlayerProfile
+  const preferPlayer = preferredMode === 'player' && canUsePlayerMode
 
   let navbar: React.ReactNode
 
@@ -79,16 +87,10 @@ export default async function DashboardLayout({
         />
       )
     } else {
-      const { data: profile } = await supabase
-        .from('player_profiles')
-        .select('gamertag')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
       const fallbackName = user.email?.split('@')[0] ?? 'Player'
       navbar = (
         <PlayerNavbar
-          gamertag={profile?.gamertag ?? fallbackName}
+          gamertag={playerProfile?.gamertag ?? fallbackName}
           avatarUrl={null}
           canSwitchToOrg={hasOrgRole}
           canAccessAdmin={hasAdminRole}
@@ -96,16 +98,10 @@ export default async function DashboardLayout({
       )
     }
   } else {
-    const { data: profile } = await supabase
-      .from('player_profiles')
-      .select('gamertag')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
     const fallbackName = user.email?.split('@')[0] ?? 'Player'
     navbar = (
       <PlayerNavbar
-        gamertag={profile?.gamertag ?? fallbackName}
+        gamertag={playerProfile?.gamertag ?? fallbackName}
         avatarUrl={null}
         canSwitchToOrg={hasOrgRole}
         canAccessAdmin={hasAdminRole}
