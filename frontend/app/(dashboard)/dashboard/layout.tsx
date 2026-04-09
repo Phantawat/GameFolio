@@ -29,6 +29,7 @@ export default async function DashboardLayout({
   const roles = (roleRows ?? []).map((row) => row.role) as UserRoleType[]
   const hasPlayerRole = roles.includes('PLAYER')
   const hasOrgRole = roles.includes('ORG_ADMIN') || roles.includes('ORG_MEMBER')
+  const hasAdminRole = roles.includes('PLATFORM_ADMIN')
   const cookieStore = await cookies()
   const preferredMode = cookieStore.get('gf_nav_mode')?.value
   const preferPlayer = preferredMode === 'player' && hasPlayerRole
@@ -90,6 +91,7 @@ export default async function DashboardLayout({
           gamertag={profile?.gamertag ?? fallbackName}
           avatarUrl={null}
           canSwitchToOrg={hasOrgRole}
+          canAccessAdmin={hasAdminRole}
         />
       )
     }
@@ -106,6 +108,7 @@ export default async function DashboardLayout({
         gamertag={profile?.gamertag ?? fallbackName}
         avatarUrl={null}
         canSwitchToOrg={hasOrgRole}
+        canAccessAdmin={hasAdminRole}
       />
     )
   }

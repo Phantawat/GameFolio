@@ -28,13 +28,25 @@ function isActivePath(pathname: string, href: string) {
     return pathname === '/dashboard'
   }
 
+  if (href === '/admin') {
+    return pathname === '/admin' || pathname.startsWith('/admin/')
+  }
+
   return pathname.startsWith(href)
 }
 
-export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = false }: PlayerNavProps) {
+export default function PlayerNavbar({
+  gamertag,
+  avatarUrl,
+  canSwitchToOrg = false,
+  canAccessAdmin = false,
+}: PlayerNavProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const initial = gamertag?.trim().charAt(0).toUpperCase() || 'P'
+  const links = canAccessAdmin
+    ? [...playerLinks, { label: 'Admin', href: '/admin' }]
+    : playerLinks
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 border-b border-zinc-800 bg-[#0F0A09]/95 backdrop-blur-md">
@@ -46,7 +58,7 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
           </Link>
 
           <nav className="hidden items-center gap-5 xl:flex">
-            {playerLinks.map((link) => {
+            {links.map((link) => {
               const active = isActivePath(pathname, link.href)
               return (
                 <Link
@@ -146,7 +158,7 @@ export default function PlayerNavbar({ gamertag, avatarUrl, canSwitchToOrg = fal
                   />
                 </div>
 
-                {playerLinks.map((link) => {
+                {links.map((link) => {
                   const active = isActivePath(pathname, link.href)
                   return (
                     <Link

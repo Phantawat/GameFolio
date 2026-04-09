@@ -2,6 +2,7 @@ export type PlayerNavProps = {
   gamertag: string
   avatarUrl?: string | null
   canSwitchToOrg?: boolean
+  canAccessAdmin?: boolean
 }
 
 export type OrgNavProps = {
