@@ -21,6 +21,7 @@ export default async function PlayerProfilePage() {
       <ProfileHeader
         gamertag={profile.gamertag}
         region={profile.region}
+        avatarUrl={profile.avatar_url}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

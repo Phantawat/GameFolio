@@ -1,7 +1,12 @@
+'use client'
+
+import { useActionState, useEffect, useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, MoreHorizontal } from 'lucide-react'
+import { Camera, Loader2, MapPin, MoreHorizontal, Pencil } from 'lucide-react'
+import { toast } from 'sonner'
+import { uploadPlayerAvatar } from '../actions'
 
 interface ProfileHeaderProps {
   gamertag?: string | null
@@ -10,6 +15,16 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProps) {
+  const [uploadState, uploadAction, isUploading] = useActionState(uploadPlayerAvatar, null)
+  const formRef = useRef<HTMLFormElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!uploadState) return
+    if (uploadState.error) toast.error(uploadState.error)
+    if (uploadState.success) toast.success(uploadState.success)
+  }, [uploadState])
+
   return (
     <div className="rounded-xl border border-zinc-800 bg-[#140C0B] overflow-hidden relative shadow-md group">
       {/* Banner/Background - Abstract Landscape */}
@@ -21,10 +36,30 @@ export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProp
            {/* Avatar with Status Dot */}
            <div className="relative group/avatar shrink-0">
               <Avatar className="w-32 h-32 md:w-36 md:h-36 border-[6px] border-[#140C0B] rounded-full shadow-2xl bg-zinc-800">
-                  <AvatarImage src={avatarUrl || "https://github.com/shadcn.png"} alt={gamertag || "Player"} className="object-cover" />
+                  <AvatarImage src={avatarUrl ?? ''} alt={gamertag || "Player"} className="object-cover" />
                   <AvatarFallback className="text-3xl font-bold bg-zinc-800 text-zinc-400 border-2 border-zinc-700">{gamertag?.substring(0, 2).toUpperCase() || "PL"}</AvatarFallback>
               </Avatar>
               <div className="absolute bottom-4 right-4 w-4 h-4 bg-green-500 rounded-full border-[3px] border-[#140C0B]"></div>
+
+              <form ref={formRef} action={uploadAction} className="absolute -bottom-1 left-1/2 -translate-x-1/2">
+                <input
+                  ref={inputRef}
+                  type="file"
+                  name="avatar"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={() => formRef.current?.requestSubmit()}
+                />
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isUploading}
+                  className="inline-flex h-7 items-center gap-1 rounded-full border border-zinc-700 bg-[#0F0A09] px-2 text-[11px] font-semibold text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                  Avatar
+                </button>
+              </form>
            </div>
            
            {/* Player Info */}
@@ -49,7 +84,8 @@ export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProp
            {/* Actions */}
            <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0 pb-1 justify-center md:justify-end">
                <Button className="bg-[#FF5C00] hover:bg-[#E65200] text-white font-bold px-6 shadow-lg shadow-orange-900/20 transition-all hover:scale-105 active:scale-95 h-10">
-                   Invite to Tryout
+                 <Pencil className="mr-2 h-4 w-4" />
+                 Edit Profile
                </Button>
                <Button variant="outline" size="icon" className="border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 h-10 w-10">
                    <MoreHorizontal className="w-5 h-5" />

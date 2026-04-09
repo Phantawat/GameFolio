@@ -15,6 +15,7 @@ type RawApplication = {
   tryouts: {
     title: string
     requirements: string | null
+    job_description: string | null
     organizations: { name: string; logo_url: string | null } | null
     games: { name: string } | null
   } | null
@@ -90,6 +91,7 @@ export default async function PlayerApplicationDetailPage({
       tryouts (
         title,
         requirements,
+        job_description,
         organizations ( name, logo_url ),
         games ( name )
       )
@@ -198,6 +200,24 @@ export default async function PlayerApplicationDetailPage({
                 </div>
               ) : (
                 <p className="text-sm italic text-zinc-500">No specific requirements were provided in the original posting.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-zinc-800 bg-[#140C0B] shadow-sm">
+            <CardHeader className="border-b border-zinc-800/50 pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold text-white">
+                <Building2 className="h-5 w-5 text-orange-500" />
+                Job Description
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-5">
+              {tryout?.job_description?.trim() ? (
+                <div className="whitespace-pre-wrap rounded-xl border border-zinc-800/80 bg-[#0F0A09] p-5 text-sm leading-relaxed text-zinc-300">
+                  {tryout.job_description}
+                </div>
+              ) : (
+                <p className="text-sm italic text-zinc-500">No job description was provided.</p>
               )}
             </CardContent>
           </Card>

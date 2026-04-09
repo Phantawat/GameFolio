@@ -28,7 +28,7 @@ export default async function DashboardLayout({
 
   const { data: playerProfile } = await supabase
     .from('player_profiles')
-    .select('gamertag')
+    .select('gamertag, avatar_url')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -91,7 +91,7 @@ export default async function DashboardLayout({
       navbar = (
         <PlayerNavbar
           gamertag={playerProfile?.gamertag ?? fallbackName}
-          avatarUrl={null}
+          avatarUrl={playerProfile?.avatar_url ?? null}
           canSwitchToOrg={hasOrgRole}
           canAccessAdmin={hasAdminRole}
         />
@@ -102,7 +102,7 @@ export default async function DashboardLayout({
     navbar = (
       <PlayerNavbar
         gamertag={playerProfile?.gamertag ?? fallbackName}
-        avatarUrl={null}
+        avatarUrl={playerProfile?.avatar_url ?? null}
         canSwitchToOrg={hasOrgRole}
         canAccessAdmin={hasAdminRole}
       />

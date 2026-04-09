@@ -15,6 +15,7 @@ interface AdminDashboardContentProps {
     activeTryouts: number
     pendingApplications: number
   }
+  currentAdminUserId: string
   users: AdminUserRow[]
   organizations: OrgRow[]
   tryouts: TryoutRow[]
@@ -24,6 +25,7 @@ type Tab = 'users' | 'organizations' | 'tryouts'
 
 export function AdminDashboardContent({
   stats,
+  currentAdminUserId,
   users,
   organizations,
   tryouts,
@@ -142,7 +144,7 @@ export function AdminDashboardContent({
 
       {/* Tab Content */}
       {activeTab === 'users' ? (
-        <AdminUsersTable users={users} />
+        <AdminUsersTable users={users} currentAdminUserId={currentAdminUserId} />
       ) : activeTab === 'organizations' ? (
         <AdminOrgsTable organizations={organizations} />
       ) : (

@@ -131,6 +131,86 @@ export const updatePlayerProfile = createSafeAction(playerProfileSchema, async (
   return { success: 'Profile updated successfully.' }
 })
 
+export async function uploadPlayerAvatar(
+  _prevState: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'You must be logged in to upload an avatar.' }
+  }
+
+  const file = formData.get('avatar') as File | null
+
+  if (!file || file.size === 0) {
+    return { error: 'Please choose an image file.' }
+  }
+
+  if (!file.type.startsWith('image/')) {
+    return { error: 'Only image files are allowed.' }
+  }
+
+  // Keep avatars lightweight for faster dashboard rendering.
+  if (file.size > 5 * 1024 * 1024) {
+    return { error: 'Avatar file is too large. Max size is 5MB.' }
+  }
+
+  const { data: profile } = await supabase
+    .from('player_profiles')
+    .select('id, avatar_url')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return { error: 'Player profile not found. Please complete onboarding first.' }
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
+  const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: false })
+
+  if (uploadError) {
+    return { error: 'Failed to upload avatar. Please try again.' }
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('avatars').getPublicUrl(path)
+
+  const { error: updateError } = await supabase
+    .from('player_profiles')
+    .update({
+      avatar_url: publicUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id)
+
+  if (updateError) {
+    return { error: 'Avatar uploaded but profile update failed. Please try again.' }
+  }
+
+  // Best effort cleanup of previous avatar object if it was in our avatars bucket.
+  if (profile.avatar_url) {
+    const marker = '/storage/v1/object/public/avatars/'
+    const idx = profile.avatar_url.indexOf(marker)
+    const objectPath = idx >= 0 ? profile.avatar_url.slice(idx + marker.length) : null
+    if (objectPath) {
+      await supabase.storage.from('avatars').remove([objectPath])
+    }
+  }
+
+  revalidatePath('/dashboard/player')
+  revalidatePath('/dashboard')
+  return { success: 'Avatar updated successfully.' }
+}
+
 export const updatePlayerExtras = createSafeAction(playerExtrasSchema, async (data, ctx) => {
   const { data: profile } = await ctx.supabase
     .from('player_profiles')
