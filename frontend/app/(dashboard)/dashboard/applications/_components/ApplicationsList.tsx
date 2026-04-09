@@ -105,9 +105,11 @@ export function ApplicationsList({
                                         {app.status}
                                     </Badge>
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-4 sm:static sm:block hidden">
-                                        <Button variant="ghost" size="sm" className="h-8 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800">
-                                            Details <ExternalLink className="w-3 h-3 ml-2" />
-                                        </Button>
+                                        <Link href={`/dashboard/applications/${app.id}`}>
+                                            <Button variant="ghost" size="sm" className="h-8 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                                Details <ExternalLink className="w-3 h-3 ml-2" />
+                                            </Button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
