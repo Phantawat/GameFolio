@@ -1,13 +1,37 @@
+import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import OrgLogoSettingsCard from './_components/OrgLogoSettingsCard'
 
 export const metadata = {
   title: 'Settings | GameFolio',
   description: 'Manage your account preferences.',
 }
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: orgMembership } = user
+    ? await supabase
+        .from('organization_members')
+        .select('organization_id, organizations(name, logo_url)')
+        .eq('user_id', user.id)
+        .in('role', ['OWNER', 'MANAGER'])
+        .order('joined_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+    : { data: null }
+
+  const org = orgMembership
+    ? Array.isArray(orgMembership.organizations)
+      ? orgMembership.organizations[0]
+      : orgMembership.organizations
+    : null
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -49,6 +73,8 @@ export default function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {org ? <OrgLogoSettingsCard orgName={org.name ?? 'Organization'} logoUrl={org.logo_url ?? null} /> : null}
     </div>
   )
 }
