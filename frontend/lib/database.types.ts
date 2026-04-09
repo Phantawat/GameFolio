@@ -22,16 +22,19 @@ export interface Database {
         Row: {
           id: string
           email: string
+          is_suspended: boolean
           created_at: string
         }
         Insert: {
           id: string
           email: string
+          is_suspended?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           email?: string
+          is_suspended?: boolean
           created_at?: string
         }
         Relationships: []
@@ -72,6 +75,7 @@ export interface Database {
           gamertag: string
           bio: string | null
           region: string | null
+          avatar_url: string | null
           competitive_experience: string | null
           hardware_details: string | null
           created_at: string
@@ -83,6 +87,7 @@ export interface Database {
           gamertag: string
           bio?: string | null
           region?: string | null
+          avatar_url?: string | null
           competitive_experience?: string | null
           hardware_details?: string | null
           created_at?: string
@@ -94,6 +99,7 @@ export interface Database {
           gamertag?: string
           bio?: string | null
           region?: string | null
+          avatar_url?: string | null
           competitive_experience?: string | null
           hardware_details?: string | null
           created_at?: string
@@ -453,6 +459,7 @@ export interface Database {
           title: string
           role_needed_id: string | null
           requirements: string | null
+          job_description: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -465,6 +472,7 @@ export interface Database {
           title: string
           role_needed_id?: string | null
           requirements?: string | null
+          job_description?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -477,6 +485,7 @@ export interface Database {
           title?: string
           role_needed_id?: string | null
           requirements?: string | null
+          job_description?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string

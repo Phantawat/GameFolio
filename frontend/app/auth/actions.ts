@@ -65,6 +65,20 @@ export async function login(
     return { error: mapAuthError(authError) }
   }
 
+  const { data: account } = await supabase
+    .from('users')
+    .select('is_suspended')
+    .eq('id', authData.user.id)
+    .maybeSingle()
+
+  if (account?.is_suspended) {
+    await supabase.auth.signOut()
+    return {
+      error:
+        'Your account is suspended. Contact support if you think this is a mistake.',
+    }
+  }
+
   const cookieStore = await cookies()
   cookieStore.set(APP_SESSION_COOKIE, String(Date.now()), {
     httpOnly: true,

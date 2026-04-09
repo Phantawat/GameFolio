@@ -45,6 +45,29 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (user) {
+    const { data: account } = await supabase
+      .from('users')
+      .select('is_suspended')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (account?.is_suspended) {
+      await supabase.auth.signOut()
+
+      const suspendedUrl = request.nextUrl.clone()
+      suspendedUrl.pathname = '/login'
+      suspendedUrl.searchParams.set(
+        'message',
+        'Your account is suspended. Contact support if you think this is a mistake.'
+      )
+
+      const suspendedResponse = NextResponse.redirect(suspendedUrl)
+      suspendedResponse.cookies.delete(APP_SESSION_COOKIE)
+      return suspendedResponse
+    }
+  }
+
+  if (user) {
     const sessionStartedAtRaw = request.cookies.get(APP_SESSION_COOKIE)?.value
     const parsedSessionStartedAt = Number(sessionStartedAtRaw)
 
