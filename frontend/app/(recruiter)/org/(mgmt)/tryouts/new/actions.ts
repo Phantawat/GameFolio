@@ -12,6 +12,7 @@ const createTryoutSchema = z.object({
   roster_id: z.string().optional(),
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   requirements: z.string().optional(),
+  job_description: z.string().optional(),
   is_active: z.string().optional(),
 })
 
@@ -23,6 +24,7 @@ const updateTryoutSchema = z.object({
   roster_id: z.string().optional(),
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   requirements: z.string().optional(),
+  job_description: z.string().optional(),
   is_active: z.string().optional(),
 })
 
@@ -55,6 +57,7 @@ export const createTryout = createSafeAction(createTryoutSchema, async (data, ct
     roster_id: rosterId,
     title: data.title,
     requirements: data.requirements ?? null,
+    job_description: data.job_description ?? null,
     is_active: isActive,
   })
 
@@ -108,6 +111,7 @@ export const updateTryout = createSafeAction(updateTryoutSchema, async (data, ct
       roster_id: rosterId,
       title: data.title,
       requirements: data.requirements ?? null,
+      job_description: data.job_description ?? null,
       is_active: isActive,
     })
     .eq('id', data.tryout_id)

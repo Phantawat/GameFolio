@@ -105,13 +105,14 @@ export default async function NewTryoutPage({
     rosterId: string | null
     title: string
     requirements: string | null
+    jobDescription: string | null
     isActive: boolean
   } | null = null
 
   if (params.edit) {
     const { data: tryout } = await supabase
       .from('tryouts')
-      .select('id, game_id, role_needed_id, roster_id, title, requirements, is_active')
+      .select('id, game_id, role_needed_id, roster_id, title, requirements, job_description, is_active')
       .eq('id', params.edit)
       .eq('organization_id', orgId)
       .maybeSingle()
@@ -127,6 +128,7 @@ export default async function NewTryoutPage({
       rosterId: tryout.roster_id,
       title: tryout.title,
       requirements: tryout.requirements,
+      jobDescription: tryout.job_description,
       isActive: tryout.is_active,
     }
   }
@@ -168,7 +170,8 @@ export default async function NewTryoutPage({
                 minRankRequirement: parsedRequirements.minRank,
                 selectedRegions: parsedRequirements.regions,
                 apiVerify: parsedRequirements.apiVerify,
-                description: parsedRequirements.description,
+                description:
+                  initialTryout.jobDescription ?? parsedRequirements.description,
               }
             : undefined
         }

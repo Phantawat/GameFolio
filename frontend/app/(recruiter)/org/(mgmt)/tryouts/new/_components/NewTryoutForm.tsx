@@ -80,7 +80,7 @@ export default function NewTryoutForm({
     <form action={formAction} className="space-y-5">
       {isEditMode && initialTryout && <input type="hidden" name="tryout_id" value={initialTryout.id} />}
       <input type="hidden" name="organization_id" value={orgId} />
-      {/* Hidden region + description fields merged into requirements */}
+      {/* Requirements stay concise; job description is persisted separately. */}
       <input
         type="hidden"
         name="requirements"
@@ -88,11 +88,11 @@ export default function NewTryoutForm({
           minRankRequirement.trim() ? `Minimum Rank: ${minRankRequirement.trim()}` : '',
           selectedRegions.length > 0 ? `Regions: ${selectedRegions.join(', ')}` : '',
           apiVerify ? `API Verify: Required` : '',
-          description,
         ]
           .filter(Boolean)
           .join('\n')}
       />
+      <input type="hidden" name="job_description" value={description} />
 
       {/* ── Core Details ── */}
       <section className="bg-[#140C0B] border border-zinc-800 rounded-xl p-6 space-y-5">

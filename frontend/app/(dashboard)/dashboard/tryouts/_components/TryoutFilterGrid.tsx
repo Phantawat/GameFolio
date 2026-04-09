@@ -12,6 +12,7 @@ export type TryoutItem = {
   id: string
   title: string
   requirements: string | null
+  job_description: string | null
   created_at: string
   org: { name: string; logo_url: string | null; region: string | null } | null
   game: { name: string } | null
@@ -37,7 +38,8 @@ export function TryoutFilterGrid({ tryouts, allGames, allRoles }: TryoutFilterGr
         !q ||
         t.title.toLowerCase().includes(q) ||
         (t.org?.name ?? '').toLowerCase().includes(q) ||
-        (t.requirements ?? '').toLowerCase().includes(q)
+        (t.requirements ?? '').toLowerCase().includes(q) ||
+        (t.job_description ?? '').toLowerCase().includes(q)
       const matchesGame = !selectedGame || t.game?.name === selectedGame
       const matchesRole = !selectedRole || t.role?.role_name === selectedRole
       return matchesSearch && matchesGame && matchesRole
@@ -174,9 +176,20 @@ export function TryoutFilterGrid({ tryouts, allGames, allRoles }: TryoutFilterGr
                 </div>
 
                 {tryout.requirements && (
-                  <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3 flex-1">
+                  <p className="text-zinc-400 text-xs leading-relaxed line-clamp-2">
                     {tryout.requirements}
                   </p>
+                )}
+
+                {tryout.job_description && (
+                  <div className="rounded-lg border border-zinc-800/70 bg-zinc-900/30 p-2.5">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Job Description
+                    </p>
+                    <p className="line-clamp-3 text-xs leading-relaxed text-zinc-300">
+                      {tryout.job_description}
+                    </p>
+                  </div>
                 )}
 
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/50">
