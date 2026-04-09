@@ -10,6 +10,11 @@ const toggleTryoutSchema = z.object({
   is_active: z.enum(['true', 'false']),
 })
 
+const toggleUserSuspensionSchema = z.object({
+  user_id: z.string().uuid('Invalid user.'),
+  is_suspended: z.enum(['true', 'false']),
+})
+
 export const toggleTryoutActive = createSafeAction(
   toggleTryoutSchema,
   async (data, ctx) => {
@@ -51,6 +56,42 @@ export const toggleTryoutActive = createSafeAction(
     revalidatePath('/dashboard/tryouts')
     return {
       success: newActive ? 'Tryout activated.' : 'Tryout deactivated.',
+    }
+  }
+)
+
+export const toggleUserSuspension = createSafeAction(
+  toggleUserSuspensionSchema,
+  async (data, ctx) => {
+    const { data: role } = await ctx.supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', ctx.user.id)
+      .eq('role', 'PLATFORM_ADMIN')
+      .maybeSingle()
+
+    if (!role) {
+      return { error: 'Permission denied. Platform admin access required.' }
+    }
+
+    if (data.user_id === ctx.user.id) {
+      return { error: 'You cannot change your own account status.' }
+    }
+
+    const nextSuspended = data.is_suspended === 'true'
+
+    const { error } = await ctx.supabase
+      .from('users')
+      .update({ is_suspended: nextSuspended })
+      .eq('id', data.user_id)
+
+    if (error) {
+      return { error: 'Failed to update user account status.' }
+    }
+
+    revalidatePath('/admin')
+    return {
+      success: nextSuspended ? 'User account suspended.' : 'User account reactivated.',
     }
   }
 )

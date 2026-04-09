@@ -16,6 +16,11 @@ export default async function AdminDashboardPage() {
 
   if (!user) redirect('/login')
 
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, email, is_suspended, created_at, user_roles(role)')
+    .order('created_at', { ascending: false })
+
   // Fetch all organizations with member counts
   const { data: organizations } = await supabase
     .from('organizations')
@@ -35,7 +40,13 @@ export default async function AdminDashboardPage() {
     `)
     .order('created_at', { ascending: false })
 
+  const { count: pendingApplications } = await supabase
+    .from('applications')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'PENDING')
+
   // Compute stats
+  const totalUsers = users?.length ?? 0
   const totalOrgs = organizations?.length ?? 0
   const totalTryouts = tryouts?.length ?? 0
   const activeTryouts = tryouts?.filter((t) => t.is_active !== false).length ?? 0
@@ -70,9 +81,27 @@ export default async function AdminDashboardPage() {
     }
   })
 
+  const userRows = (users ?? []).map((row) => {
+    const roleRows = Array.isArray(row.user_roles) ? row.user_roles : []
+    return {
+      id: row.id,
+      email: row.email,
+      roles: roleRows.map((r: { role: string }) => r.role),
+      isSuspended: row.is_suspended,
+      createdAt: row.created_at,
+    }
+  })
+
   return (
     <AdminDashboardContent
-      stats={{ totalOrgs, totalTryouts, activeTryouts }}
+      stats={{
+        totalUsers,
+        totalOrgs,
+        totalTryouts,
+        activeTryouts,
+        pendingApplications: pendingApplications ?? 0,
+      }}
+      users={userRows}
       organizations={orgRows}
       tryouts={tryoutRows}
     />
