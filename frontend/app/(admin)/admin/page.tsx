@@ -101,6 +101,7 @@ export default async function AdminDashboardPage() {
         activeTryouts,
         pendingApplications: pendingApplications ?? 0,
       }}
+      currentAdminUserId={user.id}
       users={userRows}
       organizations={orgRows}
       tryouts={tryoutRows}
