@@ -12,7 +12,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createTryout } from '@/app/(recruiter)/org/(mgmt)/tryouts/new/actions'
+import { createTryout, updateTryout } from '@/app/(recruiter)/org/(mgmt)/tryouts/new/actions'
 
 const MOCK_USER = { id: 'user-1', email: 'user@example.com' }
 // Proper UUID v4: 3rd group starts with '4', 4th group starts with 8/9/a/b
@@ -157,5 +157,102 @@ describe('createTryout()', () => {
     expect(result).toEqual({
       error: 'Failed to create tryout. Please try again.',
     })
+  })
+
+  it('7: persists job_description as a dedicated tryout field', async () => {
+    const mockSupabase = makeSupabaseMock({ user: MOCK_USER })
+    let insertedData: any = null
+
+    const memberChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { role: 'OWNER' }, error: null }),
+    }
+
+    const tryoutsChain = {
+      insert: vi.fn().mockImplementation((data: any) => {
+        insertedData = data
+        return Promise.resolve({ data: null, error: null })
+      }),
+    }
+
+    mockSupabase.from
+      .mockReturnValueOnce(memberChain as any)
+      .mockReturnValueOnce(tryoutsChain as any)
+
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+
+    const fd = toFormData({
+      organization_id: VALID_ORG_ID,
+      game_id: VALID_GAME_ID,
+      title: 'Need Entry Fragger',
+      requirements: 'Minimum Rank: Immortal',
+      job_description: 'Scrims 5 days a week. Must communicate in English.',
+      is_active: 'false',
+    })
+
+    await createTryout(null, fd)
+
+    expect(insertedData?.job_description).toBe(
+      'Scrims 5 days a week. Must communicate in English.'
+    )
+    expect(insertedData?.requirements).toBe('Minimum Rank: Immortal')
+  })
+})
+
+describe('updateTryout()', () => {
+  const VALID_TRYOUT_ID = '00000003-0000-4000-8000-000000000003'
+
+  it('1: persists job_description on update payload', async () => {
+    const mockSupabase = makeSupabaseMock({ user: MOCK_USER })
+    let updatedData: any = null
+
+    const memberChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { role: 'OWNER' }, error: null }),
+    }
+
+    const existingTryoutChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: VALID_TRYOUT_ID, organization_id: VALID_ORG_ID },
+        error: null,
+      }),
+    }
+
+    const updateChain = {
+      update: vi.fn().mockImplementation((data: any) => {
+        updatedData = data
+        return {
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }
+      }),
+    }
+
+    mockSupabase.from
+      .mockReturnValueOnce(memberChain as any)
+      .mockReturnValueOnce(existingTryoutChain as any)
+      .mockReturnValueOnce(updateChain as any)
+
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+
+    const fd = toFormData({
+      tryout_id: VALID_TRYOUT_ID,
+      organization_id: VALID_ORG_ID,
+      game_id: VALID_GAME_ID,
+      title: 'Updated Tryout',
+      requirements: 'Minimum Rank: Radiant',
+      job_description: 'Weekly VOD review and team practice required.',
+      is_active: 'false',
+    })
+
+    await expect(updateTryout(null, fd)).rejects.toThrow('NEXT_REDIRECT')
+    expect(updatedData?.job_description).toBe('Weekly VOD review and team practice required.')
+    expect(updatedData?.requirements).toBe('Minimum Rank: Radiant')
+    expect(redirect).toHaveBeenCalledWith('/org/tryouts')
   })
 })

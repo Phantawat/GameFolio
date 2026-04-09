@@ -12,7 +12,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { upsertGameStats } from '@/app/(dashboard)/dashboard/player/actions'
+import { upsertGameStats, uploadPlayerAvatar } from '@/app/(dashboard)/dashboard/player/actions'
 
 const MOCK_USER = { id: 'user-1', email: 'user@example.com' }
 const VALID_GAME_ID = '550e8400-e29b-41d4-a716-446655440000'
@@ -101,5 +101,46 @@ describe('upsertGameStats()', () => {
     const result = await upsertGameStats(null, fd)
 
     expect(result).toEqual({ error: 'DB error occurred' })
+  })
+})
+
+describe('uploadPlayerAvatar()', () => {
+  it('1: returns error when no file is provided', async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ user: MOCK_USER }) as any)
+    const fd = new FormData()
+
+    const result = await uploadPlayerAvatar(null, fd)
+
+    expect(result.error).toMatch(/choose an image file/i)
+  })
+
+  it('2: returns error when file is not an image', async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ user: MOCK_USER }) as any)
+    const fd = new FormData()
+    fd.append('avatar', new File([new Blob(['abc'])], 'doc.txt', { type: 'text/plain' }))
+
+    const result = await uploadPlayerAvatar(null, fd)
+
+    expect(result.error).toMatch(/only image files/i)
+  })
+
+  it('3: updates avatar_url and revalidates profile paths on success', async () => {
+    const mockSupabase = makeSupabaseMock({
+      user: MOCK_USER,
+      fromChains: [
+        { data: { id: 'profile-1', avatar_url: null }, error: null },
+        { data: null, error: null },
+      ],
+    })
+
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+    const fd = new FormData()
+    fd.append('avatar', new File([new Blob(['img'])], 'avatar.png', { type: 'image/png' }))
+
+    const result = await uploadPlayerAvatar(null, fd)
+
+    expect(result).toEqual({ success: 'Avatar updated successfully.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard')
   })
 })

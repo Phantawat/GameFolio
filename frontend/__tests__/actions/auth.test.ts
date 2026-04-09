@@ -91,7 +91,10 @@ describe('login()', () => {
 
   it('6: redirects to /dashboard/player when player_profile exists', async () => {
     const mockSupabase = makeSupabaseMock({
-      fromChains: [{ data: { id: 'profile-1' }, error: null }], // profile exists
+      fromChains: [
+        { data: { is_suspended: false }, error: null },
+        { data: { id: 'profile-1' }, error: null },
+      ], // account + profile exists
     })
     mockSupabase.auth.signInWithPassword = vi.fn().mockResolvedValue({
       data: { user: BASE_USER, session: {} },
@@ -102,6 +105,25 @@ describe('login()', () => {
 
     await expect(login(null, fd)).rejects.toThrow('NEXT_REDIRECT')
     expect(redirect).toHaveBeenCalledWith('/dashboard/player')
+  })
+
+  it('7: returns account suspended error and does not redirect', async () => {
+    const mockSupabase = makeSupabaseMock({
+      fromChains: [{ data: { is_suspended: true }, error: null }],
+    })
+    mockSupabase.auth.signInWithPassword = vi.fn().mockResolvedValue({
+      data: { user: BASE_USER, session: {} },
+      error: null,
+    })
+    mockSupabase.auth.signOut = vi.fn().mockResolvedValue({ error: null })
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as any)
+    const fd = toFormData({ email: VALID_EMAIL, password: VALID_PASSWORD })
+
+    const result = await login(null, fd)
+
+    expect(result.error).toMatch(/account is suspended/i)
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledTimes(1)
+    expect(redirect).not.toHaveBeenCalled()
   })
 })
 

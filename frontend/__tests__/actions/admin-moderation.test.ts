@@ -11,10 +11,16 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { toggleTryoutActive } from '@/app/(admin)/admin/actions'
+import { toggleTryoutActive, toggleUserSuspension } from '@/app/(admin)/admin/actions'
 
-const ADMIN_USER = { id: 'admin-1', email: 'admin@example.com' }
-const PLAYER_USER = { id: 'player-1', email: 'player@example.com' }
+const ADMIN_USER = {
+  id: '00000030-0000-4000-8000-000000000030',
+  email: 'admin@example.com',
+}
+const PLAYER_USER = {
+  id: '00000031-0000-4000-8000-000000000031',
+  email: 'player@example.com',
+}
 const VALID_TRYOUT_ID = '00000010-0000-4000-8000-000000000010'
 
 beforeEach(() => {
@@ -129,5 +135,57 @@ describe('toggleTryoutActive()', () => {
     const result = await toggleTryoutActive(null, fd)
 
     expect(result).toEqual({ error: 'Failed to update tryout status.' })
+  })
+})
+
+describe('toggleUserSuspension()', () => {
+  const VALID_USER_ID = '00000020-0000-4000-8000-000000000020'
+
+  it('1: denies non-admin user', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: PLAYER_USER,
+        fromChains: [{ data: null, error: null }],
+      }) as any
+    )
+    const fd = toFormData({ user_id: VALID_USER_ID, is_suspended: 'true' })
+
+    const result = await toggleUserSuspension(null, fd)
+
+    expect(result.error).toMatch(/platform admin access required/i)
+  })
+
+  it('2: blocks self-suspension for current admin', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [{ data: { role: 'PLATFORM_ADMIN' }, error: null }],
+      }) as any
+    )
+
+    const fd = toFormData({ user_id: ADMIN_USER.id, is_suspended: 'true' })
+
+    const result = await toggleUserSuspension(null, fd)
+
+    expect(result.error).toMatch(/cannot change your own account status/i)
+  })
+
+  it('3: suspends user when admin is authorized', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [
+          { data: { role: 'PLATFORM_ADMIN' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const fd = toFormData({ user_id: VALID_USER_ID, is_suspended: 'true' })
+
+    const result = await toggleUserSuspension(null, fd)
+
+    expect(result).toEqual({ success: 'User account suspended.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/admin')
   })
 })

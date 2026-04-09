@@ -67,6 +67,7 @@ export function makeSupabaseMock(options: {
       }),
       signInWithPassword: vi.fn(),
       signUp: vi.fn(),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
       ...options.authOverrides,
     },
     from: mockFrom,
