@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Gamepad2, Users, MapPin, Clock, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +28,7 @@ interface TryoutFilterGridProps {
 }
 
 export function TryoutFilterGrid({ tryouts, allGames, allRoles }: TryoutFilterGridProps) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [selectedGame, setSelectedGame] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
@@ -131,7 +133,16 @@ export function TryoutFilterGrid({ tryouts, allGames, allRoles }: TryoutFilterGr
           {filtered.map((tryout) => (
             <div
               key={tryout.id}
-              className="bg-[#140C0B] border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-600 transition-all group flex flex-col"
+              role="link"
+              tabIndex={0}
+              onClick={() => router.push(`/dashboard/tryouts/${tryout.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  router.push(`/dashboard/tryouts/${tryout.id}`)
+                }
+              }}
+              className="bg-[#140C0B] border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-600 transition-all group flex flex-col cursor-pointer"
             >
               <div className="h-1 w-full bg-gradient-to-r from-[#FF5C00] to-orange-400" />
               <div className="p-5 flex flex-col gap-4 flex-1">
