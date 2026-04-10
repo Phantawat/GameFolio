@@ -55,4 +55,5 @@ yarn-error.log*
 next-env.d.ts
 
 /.github
-
+test-results/
+playwright-report/
