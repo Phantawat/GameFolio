@@ -39,6 +39,10 @@ const playerExtrasSchema = z.object({
     .or(z.literal('')),
 })
 
+const toggleSeekingTeamSchema = z.object({
+  seeking_team: z.enum(['true', 'false']),
+})
+
 const hardwareDetailsSchema = z.object({
   mouse: z.string().trim().max(120).optional().or(z.literal('')),
   keyboard: z.string().trim().max(120).optional().or(z.literal('')),
@@ -130,6 +134,42 @@ export const updatePlayerProfile = createSafeAction(playerProfileSchema, async (
   revalidatePath('/dashboard/player')
   return { success: 'Profile updated successfully.' }
 })
+
+export const togglePlayerAvailability = createSafeAction(
+  toggleSeekingTeamSchema,
+  async (data, ctx) => {
+    const { data: profile } = await ctx.supabase
+      .from('player_profiles')
+      .select('id')
+      .eq('user_id', ctx.user.id)
+      .maybeSingle()
+
+    if (!profile) {
+      return { error: 'Player profile not found. Please complete onboarding first.' }
+    }
+
+    const nextSeekingTeam = data.seeking_team === 'true'
+
+    const { error } = await ctx.supabase
+      .from('player_profiles')
+      .update({
+        seeking_team: nextSeekingTeam,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id)
+
+    if (error) {
+      return { error: 'Failed to update availability. Please try again.' }
+    }
+
+    revalidatePath('/dashboard/player')
+    return {
+      success: nextSeekingTeam
+        ? 'Status updated: Looking for Team.'
+        : 'Status updated: Not Looking for Team.',
+    }
+  }
+)
 
 export async function uploadPlayerAvatar(
   _prevState: ActionResult | null,

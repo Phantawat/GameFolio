@@ -76,6 +76,7 @@ export interface Database {
           bio: string | null
           region: string | null
           avatar_url: string | null
+          seeking_team: boolean
           competitive_experience: string | null
           hardware_details: string | null
           created_at: string
@@ -88,6 +89,7 @@ export interface Database {
           bio?: string | null
           region?: string | null
           avatar_url?: string | null
+          seeking_team?: boolean
           competitive_experience?: string | null
           hardware_details?: string | null
           created_at?: string
@@ -100,6 +102,7 @@ export interface Database {
           bio?: string | null
           region?: string | null
           avatar_url?: string | null
+          seeking_team?: boolean
           competitive_experience?: string | null
           hardware_details?: string | null
           created_at?: string

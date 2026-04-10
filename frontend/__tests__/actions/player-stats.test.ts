@@ -12,7 +12,11 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { upsertGameStats, uploadPlayerAvatar } from '@/app/(dashboard)/dashboard/player/actions'
+import {
+  togglePlayerAvailability,
+  upsertGameStats,
+  uploadPlayerAvatar,
+} from '@/app/(dashboard)/dashboard/player/actions'
 
 const MOCK_USER = { id: 'user-1', email: 'user@example.com' }
 const VALID_GAME_ID = '550e8400-e29b-41d4-a716-446655440000'
@@ -142,5 +146,48 @@ describe('uploadPlayerAvatar()', () => {
     expect(result).toEqual({ success: 'Avatar updated successfully.' })
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard')
+  })
+})
+
+describe('togglePlayerAvailability()', () => {
+  it('1: returns fieldErrors when seeking_team is invalid', async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ user: MOCK_USER }) as any)
+    const fd = toFormData({ seeking_team: 'maybe' })
+
+    const result = await togglePlayerAvailability(null, fd)
+
+    expect(result.fieldErrors?.seeking_team).toBeDefined()
+  })
+
+  it('2: returns error when player profile is not found', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [{ data: null, error: null }],
+      }) as any
+    )
+    const fd = toFormData({ seeking_team: 'false' })
+
+    const result = await togglePlayerAvailability(null, fd)
+
+    expect(result.error).toMatch(/player profile not found/i)
+  })
+
+  it('3: updates availability and revalidates profile page', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+    const fd = toFormData({ seeking_team: 'false' })
+
+    const result = await togglePlayerAvailability(null, fd)
+
+    expect(result).toEqual({ success: 'Status updated: Not Looking for Team.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
   })
 })

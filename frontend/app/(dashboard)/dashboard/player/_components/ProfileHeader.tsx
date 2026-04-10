@@ -1,29 +1,64 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Camera, Loader2, MapPin, MoreHorizontal, Pencil } from 'lucide-react'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet'
+import { Camera, Copy, Loader2, MapPin, MoreHorizontal, Pencil, Users } from 'lucide-react'
 import { toast } from 'sonner'
-import { uploadPlayerAvatar } from '../actions'
+import { togglePlayerAvailability, uploadPlayerAvatar } from '../actions'
 
 interface ProfileHeaderProps {
   gamertag?: string | null
   region?: string | null
   avatarUrl?: string | null
+  seekingTeam?: boolean | null
 }
 
-export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProps) {
+export function ProfileHeader({ gamertag, region, avatarUrl, seekingTeam }: ProfileHeaderProps) {
   const [uploadState, uploadAction, isUploading] = useActionState(uploadPlayerAvatar, null)
+  const [availabilityState, availabilityAction, isAvailabilityPending] = useActionState(
+    togglePlayerAvailability,
+    null
+  )
   const formRef = useRef<HTMLFormElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [isSeekingTeam, setIsSeekingTeam] = useState(seekingTeam ?? true)
+
+  async function copyProfileLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/dashboard/player`)
+      toast.success('Profile link copied.')
+    } catch {
+      toast.error('Failed to copy link. Please try again.')
+    }
+  }
 
   useEffect(() => {
     if (!uploadState) return
     if (uploadState.error) toast.error(uploadState.error)
     if (uploadState.success) toast.success(uploadState.success)
   }, [uploadState])
+
+  useEffect(() => {
+    if (!availabilityState) return
+    if (availabilityState.error) {
+      toast.error(availabilityState.error)
+      return
+    }
+    if (availabilityState.success) {
+      toast.success(availabilityState.success)
+      setIsSeekingTeam((prev) => !prev)
+    }
+  }, [availabilityState])
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-[#140C0B] overflow-hidden relative shadow-md group">
@@ -66,8 +101,14 @@ export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProp
            <div className="flex-1 pb-1 space-y-1 w-full text-center md:text-left">
                <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
                    <h1 className="text-4xl font-extrabold text-white tracking-tight">{gamertag || "Ganzanarak"}</h1>
-                   <Badge className="bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 uppercase tracking-wider font-bold text-[10px] px-2 py-0.5 h-6 rounded">
-                       Looking for Team
+                   <Badge
+                     className={
+                       isSeekingTeam
+                         ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 uppercase tracking-wider font-bold text-[10px] px-2 py-0.5 h-6 rounded'
+                         : 'bg-zinc-700/30 text-zinc-300 hover:bg-zinc-700/40 border border-zinc-600/40 uppercase tracking-wider font-bold text-[10px] px-2 py-0.5 h-6 rounded'
+                     }
+                   >
+                     {isSeekingTeam ? 'Looking for Team' : 'Not Looking'}
                    </Badge>
                </div>
                
@@ -77,7 +118,7 @@ export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProp
                         <span>{region || "South East Asia (SEA)"}</span>
                    </div>
                    <span className="text-zinc-600">•</span>
-                   <span className="text-zinc-300">Free Agent</span>
+                     <span className="text-zinc-300">{isSeekingTeam ? 'Free Agent' : 'Status Hidden'}</span>
                </div>
            </div>
 
@@ -87,9 +128,59 @@ export function ProfileHeader({ gamertag, region, avatarUrl }: ProfileHeaderProp
                  <Pencil className="mr-2 h-4 w-4" />
                  Edit Profile
                </Button>
-               <Button variant="outline" size="icon" className="border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 h-10 w-10">
-                   <MoreHorizontal className="w-5 h-5" />
-               </Button>
+
+               <Sheet>
+                 <SheetTrigger asChild>
+                   <Button
+                     variant="outline"
+                     size="icon"
+                     className="border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 h-10 w-10"
+                   >
+                     <MoreHorizontal className="w-5 h-5" />
+                     <span className="sr-only">Profile actions</span>
+                   </Button>
+                 </SheetTrigger>
+                 <SheetContent>
+                   <SheetHeader>
+                     <SheetTitle>Profile Actions</SheetTitle>
+                   </SheetHeader>
+
+                   <div className="space-y-3">
+                     <Button
+                       type="button"
+                       variant="outline"
+                       onClick={copyProfileLink}
+                       className="w-full justify-start border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-800"
+                     >
+                       <Copy className="mr-2 h-4 w-4" />
+                       Copy Profile Link
+                     </Button>
+
+                     <form action={availabilityAction}>
+                       <input type="hidden" name="seeking_team" value={isSeekingTeam ? 'false' : 'true'} />
+                       <Button
+                         type="submit"
+                         disabled={isAvailabilityPending}
+                         variant="outline"
+                         className="w-full justify-start border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-800"
+                       >
+                         {isAvailabilityPending ? (
+                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         ) : (
+                           <Users className="mr-2 h-4 w-4" />
+                         )}
+                         {isSeekingTeam ? 'Mark as Not Looking' : 'Mark as Looking for Team'}
+                       </Button>
+                     </form>
+
+                     <SheetClose asChild>
+                       <Button variant="ghost" className="w-full text-zinc-400 hover:text-white">
+                         Close
+                       </Button>
+                     </SheetClose>
+                   </div>
+                 </SheetContent>
+               </Sheet>
            </div>
       </div>
     </div>

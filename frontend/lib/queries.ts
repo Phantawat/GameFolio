@@ -51,7 +51,7 @@ export const getPlayerProfile = cache(async (): Promise<PlayerProfileRow | null>
   const { data, error } = await supabase
     .from('player_profiles')
     .select(
-      'id, user_id, gamertag, bio, region, avatar_url, competitive_experience, hardware_details, created_at, updated_at'
+      'id, user_id, gamertag, bio, region, avatar_url, seeking_team, competitive_experience, hardware_details, created_at, updated_at'
     )
     .eq('user_id', user.id)
     .single()
