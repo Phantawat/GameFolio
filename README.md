@@ -31,6 +31,13 @@
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (Radix UI primitives)
 - **Icons:** [Lucide React](https://lucide.dev/)
 
+## 🔐 Auth and Authorization Model
+
+- **Authentication:** Supabase SSR cookies refreshed in middleware.
+- **Authorization:** Enforced in server-side layouts and server actions.
+- **Role source of truth:** `users` + `user_roles` + membership tables (`organization_members`).
+- **Player onboarding:** `player_profiles` is created after sign-up during onboarding.
+
 ---
 
 ## 📂 Project Structure
@@ -51,6 +58,7 @@ frontend/
 │   └── ...
 ├── lib/
 │   ├── supabase/           # Supabase client & server utilities
+│   │   ├── middleware.ts   # Session refresh/auth gating
 │   └── utils.ts            # Helper functions
 └── public/                 # Static assets
 ```
@@ -90,6 +98,29 @@ frontend/
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### 3.5 Run SQL Migrations and E2E Fixtures
+
+Apply SQL updates in order (Supabase SQL Editor or CLI) including:
+- `supabase/week-10-admin-tryouts-update-rls-fix.sql`
+- `supabase/week-10-player-profile-availability.sql`
+- `supabase/week-11-admin-tryout-soft-delete.sql`
+- `supabase/week-11-e2e-fixtures-seed.sql`
+
+Configure E2E credentials (must match seeded values or your overridden fixtures):
+
+```env
+E2E_ADMIN_EMAIL=e2e-admin@gamefolio.test
+E2E_ADMIN_PASSWORD=E2EAdminPass!123
+E2E_PLAYER_EMAIL=e2e-player@gamefolio.test
+E2E_PLAYER_PASSWORD=E2EPlayerPass!123
+E2E_RECRUITER_EMAIL=e2e-recruiter@gamefolio.test
+E2E_RECRUITER_PASSWORD=E2ERecruiterPass!123
+E2E_RECRUITER_NO_ORG_EMAIL=e2e-recruiter-no-org@gamefolio.test
+E2E_RECRUITER_NO_ORG_PASSWORD=E2ENoOrgPass!123
+E2E_ONBOARDING_PLAYER_EMAIL=e2e-onboarding@gamefolio.test
+E2E_ONBOARDING_PLAYER_PASSWORD=E2EOnboardPass!123
+```
+
 ---
 
 ## 📦 Scope & Constraints (MVP)
@@ -99,6 +130,12 @@ To ensure focus and robust core functionality, the current version (MVP) has the
 - **Web-First:** Optimized for responsive web usage (no native mobile apps).
 - **Communication:** No in-app real-time chat (external communication is encouraged after initial screening).
 - **Monetization:** No payment gateways or subscription tiers implemented yet.
+
+## 🧪 Testing Commands
+
+- Unit/action/component tests: `npm run test`
+- E2E tests: `npm run test:e2e`
+- E2E headed UI mode: `npm run test:e2e:ui`
 
 ---
 

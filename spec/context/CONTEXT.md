@@ -31,11 +31,11 @@ GameFolio is a full-stack, web-based professional networking platform designed s
 * **Capabilities:**
   * View all users, organizations, and tryouts.
   * Suspend/ban malicious users or organizations.
-  * Delete inappropriate content (tryouts, profiles).
+  * Moderate tryouts with activate/deactivate and soft-delete/restore controls.
 
 ## 🔄 Core System Workflows
 
-1. **Authentication Flow:** User signs up -> Supabase Auth triggers a database function -> Automatically creates a record in the `profiles` table with a default `PLAYER` role.
+1. **Authentication Flow:** User signs up -> Supabase Auth trigger writes to `users` and `user_roles` (default `PLAYER`) -> onboarding creates `player_profiles`.
 2. **The Application Flow:** Recruiter posts a `Tryout` -> Player views it and submits an `Application` -> Recruiter views the `Application` and updates its status -> Player sees the status update on their dashboard.
 
 ## 📦 Scope Boundaries (Strict MVP Limitations)

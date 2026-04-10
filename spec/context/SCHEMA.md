@@ -27,6 +27,7 @@ class PlayerProfile {
     +string gamertag
     +string bio
     +string region
+    +boolean seeking_team
 }
 class PlayerGameStat {
     +UUID id
@@ -100,7 +101,10 @@ class Tryout {
     +UUID id
     +string title
     +string requirements
+    +string job_description
     +boolean is_active
+    +timestamp deleted_at
+    +UUID deleted_by
 }
 class Application {
     +UUID id
@@ -152,6 +156,7 @@ CREATE TABLE player_profiles (
     gamertag TEXT NOT NULL UNIQUE,
     bio TEXT,
     region TEXT,
+    seeking_team BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -256,7 +261,10 @@ CREATE TABLE tryouts (
     title TEXT NOT NULL,
     role_needed_id UUID REFERENCES game_roles(id) ON DELETE SET NULL,
     requirements TEXT,
+    job_description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP,
+    deleted_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -323,7 +331,7 @@ ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own data" ON public.users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Profiles are viewable by everyone" ON public.player_profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON public.player_profiles FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Active tryouts viewable by everyone" ON public.tryouts FOR SELECT USING (is_active = true);
+CREATE POLICY "Active tryouts viewable by everyone" ON public.tryouts FOR SELECT USING (is_active = true AND deleted_at IS NULL);
 CREATE POLICY "Players can apply" ON public.applications FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.player_profiles WHERE id = applications.player_profile_id AND user_id = auth.uid())
 );

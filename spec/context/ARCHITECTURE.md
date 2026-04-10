@@ -78,8 +78,20 @@ Use the `"use client"` directive *only* at the leaves of your component tree whe
 
 Do not rely purely on React Context or Local Storage for auth state.
 
-* Use Supabase middleware (`src/lib/supabase/middleware.ts`) to intercept requests and verify cookies.
-* If a user tries to access `/player` without a valid cookie or role, the middleware should redirect them to `/login` before the page even renders.
+* Use Supabase middleware (`frontend/lib/supabase/middleware.ts`) to enforce session-level authentication.
+* Middleware should not perform role lookups; keep it focused on auth/session refresh and suspended-account checks.
+
+### Official Authz Pattern
+
+Role and ownership authorization is enforced server-side in route layouts and server actions.
+
+* Middleware: session validity and coarse auth gating only.
+* Layouts (`layout.tsx`): route-level role checks (for example, admin layout checks `PLATFORM_ADMIN`).
+* Server actions: operation-level ownership and role checks (for example, org manager for tryout mutations).
+
+Anti-pattern to avoid:
+
+* Role-only middleware that performs database role lookups for every request.
 
 ---
 

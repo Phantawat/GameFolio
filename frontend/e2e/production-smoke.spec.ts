@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { hasCredentials, loginAs } from './fixtures/auth'
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
 
@@ -17,8 +18,9 @@ test.describe('Production Smoke Tests', () => {
   })
 
   test('3: end-to-end login with seeded test account', async ({ page }) => {
-    // TODO: Use seeded test credentials
-    test.skip()
+    test.skip(!hasCredentials('player'), 'Missing E2E_PLAYER credentials')
+    await loginAs(page, 'player')
+    await expect(page).toHaveURL(/\/dashboard\/player|\/dashboard/)
   })
 
   test('4: static assets load without 404s', async ({ page }) => {
