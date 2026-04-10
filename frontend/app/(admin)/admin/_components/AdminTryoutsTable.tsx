@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useActionState, useEffect } from 'react'
-import { toggleTryoutActive } from '../actions'
+import { deleteTryoutModeration, restoreTryoutModeration, toggleTryoutActive } from '../actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ export type TryoutRow = {
   id: string
   title: string
   isActive: boolean
+  deletedAt: string | null
   orgName: string
   gameName: string
   createdAt: string
@@ -51,6 +52,45 @@ function ToggleButton({ tryoutId, isActive }: { tryoutId: string; isActive: bool
         ) : (
           'Activate'
         )}
+      </Button>
+    </form>
+  )
+}
+
+function DeleteRestoreButton({ tryoutId, isDeleted }: { tryoutId: string; isDeleted: boolean }) {
+  const actionFn = isDeleted ? restoreTryoutModeration : deleteTryoutModeration
+  const [state, action, isPending] = useActionState(actionFn, null)
+
+  useEffect(() => {
+    if (state?.error) toast.error(state.error)
+    if (state?.success) toast.success(state.success)
+  }, [state])
+
+  return (
+    <form
+      action={action}
+      onSubmit={(e) => {
+        const message = isDeleted
+          ? 'Restore this tryout listing?'
+          : 'Delete this tryout listing? This hides it from player and recruiter views.'
+        if (!window.confirm(message)) {
+          e.preventDefault()
+        }
+      }}
+    >
+      <input type="hidden" name="tryout_id" value={tryoutId} />
+      <Button
+        type="submit"
+        size="sm"
+        disabled={isPending}
+        variant="outline"
+        className={
+          isDeleted
+            ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 text-xs'
+            : 'border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 text-xs'
+        }
+      >
+        {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : isDeleted ? 'Restore' : 'Delete'}
       </Button>
     </form>
   )
@@ -101,7 +141,7 @@ export function AdminTryoutsTable({ tryouts }: AdminTryoutsTableProps) {
               <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-5 py-3">Game</th>
               <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-5 py-3">Status</th>
               <th className="text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider px-5 py-3">Created</th>
-              <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-5 py-3">Action</th>
+              <th className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider px-5 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -117,7 +157,11 @@ export function AdminTryoutsTable({ tryouts }: AdminTryoutsTableProps) {
                   </Badge>
                 </td>
                 <td className="px-5 py-4">
-                  {tryout.isActive ? (
+                  {tryout.deletedAt ? (
+                    <Badge className="bg-red-500/20 text-red-400 border-red-500/20 text-xs">
+                      Deleted
+                    </Badge>
+                  ) : tryout.isActive ? (
                     <Badge className="bg-green-500/20 text-green-500 border-green-500/20 text-xs">
                       Active
                     </Badge>
@@ -135,7 +179,10 @@ export function AdminTryoutsTable({ tryouts }: AdminTryoutsTableProps) {
                   })}
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <ToggleButton tryoutId={tryout.id} isActive={tryout.isActive} />
+                  <div className="flex justify-end gap-2">
+                    <DeleteRestoreButton tryoutId={tryout.id} isDeleted={Boolean(tryout.deletedAt)} />
+                    {!tryout.deletedAt && <ToggleButton tryoutId={tryout.id} isActive={tryout.isActive} />}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -43,6 +43,7 @@ export default async function OrgTryoutsPage() {
     .from('tryouts')
     .select('id, title, is_active, created_at, games(name), game_roles(role_name)')
     .eq('organization_id', orgId)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   const tryoutIds = (tryoutRows ?? []).map((row) => row.id)

@@ -11,7 +11,12 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { toggleTryoutActive, toggleUserSuspension } from '@/app/(admin)/admin/actions'
+import {
+  deleteTryoutModeration,
+  restoreTryoutModeration,
+  toggleTryoutActive,
+  toggleUserSuspension,
+} from '@/app/(admin)/admin/actions'
 
 const ADMIN_USER = {
   id: '00000030-0000-4000-8000-000000000030',
@@ -87,7 +92,7 @@ describe('toggleTryoutActive()', () => {
         user: ADMIN_USER,
         fromChains: [
           { data: { role: 'PLATFORM_ADMIN' }, error: null },           // role check
-          { data: { id: VALID_TRYOUT_ID, is_active: true }, error: null }, // tryout found
+          { data: { id: VALID_TRYOUT_ID, is_active: true, deleted_at: null }, error: null }, // tryout found
           { data: null, error: null },                                  // update success
         ],
       }) as any
@@ -107,7 +112,7 @@ describe('toggleTryoutActive()', () => {
         user: ADMIN_USER,
         fromChains: [
           { data: { role: 'PLATFORM_ADMIN' }, error: null },
-          { data: { id: VALID_TRYOUT_ID, is_active: false }, error: null },
+          { data: { id: VALID_TRYOUT_ID, is_active: false, deleted_at: null }, error: null },
           { data: null, error: null },
         ],
       }) as any
@@ -125,7 +130,7 @@ describe('toggleTryoutActive()', () => {
         user: ADMIN_USER,
         fromChains: [
           { data: { role: 'PLATFORM_ADMIN' }, error: null },
-          { data: { id: VALID_TRYOUT_ID, is_active: true }, error: null },
+          { data: { id: VALID_TRYOUT_ID, is_active: true, deleted_at: null }, error: null },
           { data: null, error: { message: 'DB failure' } },
         ],
       }) as any
@@ -135,6 +140,77 @@ describe('toggleTryoutActive()', () => {
     const result = await toggleTryoutActive(null, fd)
 
     expect(result).toEqual({ error: 'Failed to update tryout status.' })
+  })
+
+  it('8: blocks status toggles for deleted tryouts', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [
+          { data: { role: 'PLATFORM_ADMIN' }, error: null },
+          { data: { id: VALID_TRYOUT_ID, is_active: false, deleted_at: '2026-01-01T00:00:00Z' }, error: null },
+        ],
+      }) as any
+    )
+    const fd = toFormData({ tryout_id: VALID_TRYOUT_ID, is_active: 'true' })
+
+    const result = await toggleTryoutActive(null, fd)
+
+    expect(result).toEqual({ error: 'Restore this tryout before changing active status.' })
+  })
+})
+
+describe('deleteTryoutModeration()', () => {
+  it('1: denies non-admin user', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: PLAYER_USER,
+        fromChains: [{ data: null, error: null }],
+      }) as any
+    )
+
+    const result = await deleteTryoutModeration(null, toFormData({ tryout_id: VALID_TRYOUT_ID }))
+
+    expect(result.error).toMatch(/platform admin access required/i)
+  })
+
+  it('2: soft-deletes tryout for admin', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [
+          { data: { role: 'PLATFORM_ADMIN' }, error: null },
+          { data: { id: VALID_TRYOUT_ID, deleted_at: null }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await deleteTryoutModeration(null, toFormData({ tryout_id: VALID_TRYOUT_ID }))
+
+    expect(result).toEqual({ success: 'Tryout deleted.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/admin')
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/tryouts')
+    expect(revalidatePath).toHaveBeenCalledWith('/org/tryouts')
+  })
+})
+
+describe('restoreTryoutModeration()', () => {
+  it('1: restores previously deleted tryout for admin', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [
+          { data: { role: 'PLATFORM_ADMIN' }, error: null },
+          { data: { id: VALID_TRYOUT_ID, deleted_at: '2026-01-01T00:00:00Z' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await restoreTryoutModeration(null, toFormData({ tryout_id: VALID_TRYOUT_ID }))
+
+    expect(result).toEqual({ success: 'Tryout restored.' })
   })
 })
 

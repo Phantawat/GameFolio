@@ -33,6 +33,7 @@ export default async function TryoutsPage() {
       requirements,
       job_description,
       is_active,
+      deleted_at,
       created_at,
       organizations ( name, logo_url, region ),
       games ( name ),
@@ -40,6 +41,7 @@ export default async function TryoutsPage() {
     `
     )
     .neq('is_active', false)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   // Fetch the current player's existing applications to show "Applied" state

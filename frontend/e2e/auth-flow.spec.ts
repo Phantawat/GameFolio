@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { hasCredentials, loginAs } from './fixtures/auth'
 
 test.describe('Authentication Guards', () => {
   test('1: redirects to /login when visiting /dashboard/player while logged out', async ({ page }) => {
@@ -12,13 +13,19 @@ test.describe('Authentication Guards', () => {
   })
 
   test('3: redirects logged-in user away from /login', async ({ page }) => {
-    // TODO: Set up authenticated session cookie before navigating
-    test.skip()
+    test.skip(!hasCredentials('player'), 'Missing E2E_PLAYER credentials')
+    await loginAs(page, 'player')
+
+    await page.goto('/login')
+    await expect(page).toHaveURL(/\/dashboard\/player|\/dashboard/)
   })
 
   test('4: redirects to /org/create when logged in but no org membership', async ({ page }) => {
-    // TODO: Set up authenticated session with no org membership
-    test.skip()
+    test.skip(!hasCredentials('recruiterNoOrg'), 'Missing E2E_RECRUITER_NO_ORG credentials')
+    await loginAs(page, 'recruiterNoOrg')
+
+    await page.goto('/org/rosters')
+    await expect(page).toHaveURL(/\/org\/create/)
   })
 
   test('5: shows error with wrong password', async ({ page }) => {

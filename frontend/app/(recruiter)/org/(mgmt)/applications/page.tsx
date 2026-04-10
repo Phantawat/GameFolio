@@ -34,6 +34,7 @@ export default async function OrgApplicationsPage() {
     .from('tryouts')
     .select('id, title, games(name)')
     .eq('organization_id', orgId)
+    .is('deleted_at', null)
 
   const tryoutIds = (tryoutRows ?? []).map((t) => t.id)
 

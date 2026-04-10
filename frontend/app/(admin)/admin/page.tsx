@@ -34,7 +34,7 @@ export default async function AdminDashboardPage() {
   const { data: tryouts } = await supabase
     .from('tryouts')
     .select(`
-      id, title, is_active, created_at,
+      id, title, is_active, deleted_at, created_at,
       organizations ( name ),
       games ( name )
     `)
@@ -75,6 +75,7 @@ export default async function AdminDashboardPage() {
       id: tryout.id,
       title: tryout.title,
       isActive: tryout.is_active !== false,
+      deletedAt: tryout.deleted_at,
       orgName: orgName ?? 'Unknown',
       gameName: gameName ?? 'Unknown',
       createdAt: tryout.created_at,

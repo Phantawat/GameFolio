@@ -464,6 +464,8 @@ export interface Database {
           requirements: string | null
           job_description: string | null
           is_active: boolean
+          deleted_at: string | null
+          deleted_by: string | null
           created_at: string
           updated_at: string
         }
@@ -477,6 +479,8 @@ export interface Database {
           requirements?: string | null
           job_description?: string | null
           is_active?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -490,6 +494,8 @@ export interface Database {
           requirements?: string | null
           job_description?: string | null
           is_active?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -520,6 +526,13 @@ export interface Database {
             columns: ['role_needed_id']
             isOneToOne: false
             referencedRelation: 'game_roles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'tryouts_deleted_by_fkey'
+            columns: ['deleted_by']
+            isOneToOne: false
+            referencedRelation: 'users'
             referencedColumns: ['id']
           }
         ]

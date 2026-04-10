@@ -5,6 +5,8 @@ import { AdminTryoutsTable, type TryoutRow } from '@/app/(admin)/admin/_componen
 
 vi.mock('@/app/(admin)/admin/actions', () => ({
   toggleTryoutActive: vi.fn(),
+  deleteTryoutModeration: vi.fn(),
+  restoreTryoutModeration: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({
@@ -24,6 +26,7 @@ function makeTryout(overrides: Partial<TryoutRow> = {}): TryoutRow {
     id: 'tryout-1',
     title: 'Valorant Open Tryout',
     isActive: true,
+    deletedAt: null,
     orgName: 'Team Phoenix',
     gameName: 'Valorant',
     createdAt: '2024-01-15T00:00:00Z',
@@ -46,13 +49,25 @@ describe('AdminTryoutsTable', () => {
     expect(screen.getByRole('button', { name: /activate/i })).toBeInTheDocument()
   })
 
-  it('3: shows empty state when tryouts array is empty', () => {
+  it('3: shows Deleted badge and Restore button for deleted tryout', () => {
+    render(
+      <AdminTryoutsTable
+        tryouts={[makeTryout({ isActive: false, deletedAt: '2026-01-01T00:00:00Z' })]}
+      />
+    )
+
+    expect(screen.getByText('Deleted')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /restore/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /activate/i })).not.toBeInTheDocument()
+  })
+
+  it('4: shows empty state when tryouts array is empty', () => {
     render(<AdminTryoutsTable tryouts={[]} />)
 
     expect(screen.getByText(/no tryouts yet/i)).toBeInTheDocument()
   })
 
-  it('4: filters tryouts by search text', async () => {
+  it('5: filters tryouts by search text', async () => {
     const user = userEvent.setup()
     const tryouts = [
       makeTryout({ id: 't1', title: 'Valorant Open Tryout' }),
@@ -68,7 +83,7 @@ describe('AdminTryoutsTable', () => {
     expect(screen.queryByText('Valorant Open Tryout')).not.toBeInTheDocument()
   })
 
-  it('5: renders tryout details correctly', () => {
+  it('6: renders tryout details correctly', () => {
     render(
       <AdminTryoutsTable
         tryouts={[

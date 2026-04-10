@@ -63,6 +63,7 @@ export default async function TryoutDetailPage({
       requirements,
       job_description,
       is_active,
+      deleted_at,
       created_at,
       organizations ( name, logo_url, region ),
       games ( name ),
@@ -70,6 +71,7 @@ export default async function TryoutDetailPage({
     `
     )
     .eq('id', tryoutId)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (!rawTryout) notFound()
