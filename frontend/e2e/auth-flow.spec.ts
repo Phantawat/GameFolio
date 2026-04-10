@@ -31,8 +31,8 @@ test.describe('Authentication Guards', () => {
   test('5: shows error with wrong password', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel(/email/i).fill('wrong@example.com')
-    await page.getByLabel(/password/i).fill('wrongpassword')
-    await page.getByRole('button', { name: /log in|sign in/i }).click()
+    await page.getByLabel(/^password$/i).fill('wrongpassword')
+    await page.getByRole('button', { name: /^sign in$/i }).click()
     // Expect error toast or message
     await expect(page.locator('[data-sonner-toast]').or(page.getByText(/invalid|error/i))).toBeVisible({
       timeout: 10000,

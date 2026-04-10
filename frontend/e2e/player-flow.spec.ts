@@ -9,11 +9,20 @@ test.describe('Player Flow – Full Journey', () => {
   // Configure PLAYWRIGHT_BASE_URL and seed data via supabase/seed.sql.
 
   test('1: sign up with valid email/password redirects to /onboarding', async ({ page }) => {
-    const email = `e2e-player-${Date.now()}@test.com`
+    test.skip(
+      process.env.E2E_ALLOW_SIGNUP !== 'true',
+      'Set E2E_ALLOW_SIGNUP=true only in environments that allow creating new Supabase auth users.'
+    )
+
+    const email = `e2e-player-${Date.now()}@example.com`
+    const password = 'TestPassword123!'
+
     await page.goto('/signup')
     await page.getByLabel(/email/i).fill(email)
-    await page.getByLabel(/password/i).fill('TestPassword123!')
-    await page.getByRole('button', { name: /sign up|create account/i }).click()
+    await page.getByLabel(/^password$/i).fill(password)
+    await page.getByLabel(/confirm password/i).fill(password)
+    await page.getByRole('checkbox', { name: /i agree to the terms and conditions and privacy policy/i }).check()
+    await page.getByRole('button', { name: /^sign up$/i }).click()
     // Depending on email verification flow, may redirect or show confirmation
     await expect(page.getByText(/check your email|onboarding/i)).toBeVisible({ timeout: 15000 })
   })

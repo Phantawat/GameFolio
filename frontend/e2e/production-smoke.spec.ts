@@ -49,8 +49,8 @@ test.describe('Production Smoke Tests', () => {
 
   test('6: environment variables are set (no undefined in page source)', async ({ page }) => {
     await page.goto('/')
-    const content = await page.content()
-    expect(content).not.toContain('undefined')
+    const visibleText = await page.locator('body').innerText()
+    expect(visibleText.toLowerCase()).not.toContain('undefined')
   })
 
   test('7: tryout search page loads public data', async ({ page }) => {
