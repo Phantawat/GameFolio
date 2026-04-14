@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -122,7 +121,7 @@ export function ApplicationsList({
                         </div>
                         <h3 className="text-zinc-300 font-medium mb-1">No applications yet</h3>
                         <p className="text-zinc-500 text-sm max-w-sm mx-auto">
-                            You haven't applied to any tryouts. Browse active listings and find your next team.
+                            You haven&apos;t applied to any tryouts. Browse active listings and find your next team.
                         </p>
                         <Link href="/dashboard/tryouts">
                             <Button className="mt-4 bg-[#FF5C00] hover:bg-orange-600 text-white font-bold">

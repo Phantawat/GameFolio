@@ -22,18 +22,17 @@ interface ApplyButtonProps {
 export function ApplyButton({ tryoutId, alreadyApplied }: ApplyButtonProps) {
   const [state, action, isPending] = useActionState(applyToTryout, null)
   const [open, setOpen] = useState(false)
-  const [hasApplied, setHasApplied] = useState(false)
+  const hasApplied = alreadyApplied || Boolean(state?.success)
+  const isDialogOpen = open && !hasApplied
 
   useEffect(() => {
     if (state?.error) toast.error(state.error)
     if (state?.success) {
       toast.success(state.success)
-      setHasApplied(true)
-      setOpen(false)
     }
   }, [state])
 
-  if (alreadyApplied || hasApplied) {
+  if (hasApplied) {
     return (
       <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         <Button
@@ -49,7 +48,7 @@ export function ApplyButton({ tryoutId, alreadyApplied }: ApplyButtonProps) {
 
   return (
     <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-      <DialogRoot open={open} onOpenChange={setOpen}>
+      <DialogRoot open={isDialogOpen} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
             size="sm"

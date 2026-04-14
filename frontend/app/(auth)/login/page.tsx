@@ -5,24 +5,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { login } from '@/app/auth/actions'
-import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useActionState, useState, useEffect } from 'react'
 import { Eye, EyeOff, Gamepad2, Sparkles, Loader2, Flame, Play } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 export default function LoginPage() {
-  const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const [flashMessage] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const params = new URLSearchParams(window.location.search)
+    return params.get('message')
+  })
   const [showPassword, setShowPassword] = useState(false)
   
   const [state, action, isPending] = useActionState(login, null)
 
   useEffect(() => {
-    if (message) {
-      toast.info(message)
+    if (flashMessage) {
+      toast.info(flashMessage)
     }
-  }, [message])
+  }, [flashMessage])
 
   useEffect(() => {
     if (state?.error) {

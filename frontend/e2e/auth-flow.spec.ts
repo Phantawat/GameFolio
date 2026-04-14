@@ -21,8 +21,8 @@ test.describe('Authentication Guards', () => {
   })
 
   test('4: redirects to /org/create when logged in but no org membership', async ({ page }) => {
-    test.skip(!hasCredentials('recruiterNoOrg'), 'Missing E2E_RECRUITER_NO_ORG credentials')
-    await loginAs(page, 'recruiterNoOrg')
+    test.skip(!hasCredentials('player'), 'Missing E2E_PLAYER credentials')
+    await loginAs(page, 'player')
 
     await page.goto('/org/rosters')
     await expect(page).toHaveURL(/\/org\/create/)

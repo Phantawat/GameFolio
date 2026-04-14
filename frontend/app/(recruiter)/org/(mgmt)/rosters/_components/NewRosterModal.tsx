@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import { Plus, ChevronDown, Loader2 } from 'lucide-react'
 import {
   DialogRoot,
@@ -30,8 +30,8 @@ export default function NewRosterModal({
   games,
   variant = 'new-roster',
 }: NewRosterModalProps) {
-  const [open, setOpen] = useState(false)
   const [state, formAction, isPending] = useActionState(createRoster, null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const dialogId = `roster-dialog-${orgId}-${variant}`
   const dialogTitleId = `${dialogId}-title`
   const dialogDescriptionId = `${dialogId}-description`
@@ -39,7 +39,7 @@ export default function NewRosterModal({
   useEffect(() => {
     if (state?.success) {
       toast.success(state.success)
-      setOpen(false)
+      closeButtonRef.current?.click()
     }
     if (state?.error) {
       toast.error(state.error)
@@ -47,7 +47,7 @@ export default function NewRosterModal({
   }, [state])
 
   return (
-    <DialogRoot open={open} onOpenChange={setOpen}>
+    <DialogRoot>
       <DialogTrigger asChild>
         {variant === 'create-now' ? (
           <Button className="bg-[#FF5C00] hover:bg-orange-600 text-white font-bold">
@@ -152,6 +152,12 @@ export default function NewRosterModal({
             </Button>
           </div>
         </form>
+
+        <DialogClose asChild>
+          <button ref={closeButtonRef} type="button" className="hidden" aria-hidden tabIndex={-1}>
+            Close
+          </button>
+        </DialogClose>
       </DialogContent>
     </DialogRoot>
   )

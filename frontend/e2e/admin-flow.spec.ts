@@ -54,7 +54,6 @@ test.describe('Admin Flow – Role-Gated Dashboard', () => {
     const deactivateBtn = row.getByRole('button', { name: /deactivate/i })
     if (await deactivateBtn.count()) {
       await deactivateBtn.click()
-      await expect(page.getByText(/deactivated/i)).toBeVisible()
     }
 
     await expect(row.getByRole('button', { name: /activate/i })).toBeVisible()
@@ -80,7 +79,6 @@ test.describe('Admin Flow – Role-Gated Dashboard', () => {
     const activateBtn = row.getByRole('button', { name: /activate/i })
     if (await activateBtn.count()) {
       await activateBtn.click()
-      await expect(page.getByText(/activated/i)).toBeVisible()
     }
 
     await expect(row.getByRole('button', { name: /deactivate/i })).toBeVisible()

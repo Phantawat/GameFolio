@@ -182,8 +182,9 @@ export default function NewTryoutForm({
 
         {/* Tryout Title */}
         <div className="space-y-1.5">
-          <Label className="text-zinc-400 text-xs uppercase tracking-wide">Tryout Title</Label>
+          <Label htmlFor="tryout-title" className="text-zinc-400 text-xs uppercase tracking-wide">Tryout Title</Label>
           <Input
+            id="tryout-title"
             name="title"
             required
             value={title}
@@ -207,10 +208,11 @@ export default function NewTryoutForm({
         {/* Min Rank */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-zinc-400 text-xs uppercase tracking-wide">
+            <Label htmlFor="min-rank-requirement" className="text-zinc-400 text-xs uppercase tracking-wide">
               Minimum Rank Requirement
             </Label>
             <Input
+              id="min-rank-requirement"
               name="min_rank_display"
               value={minRankRequirement}
               onChange={(e) => setMinRankRequirement(e.target.value)}
