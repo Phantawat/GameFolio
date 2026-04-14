@@ -3,7 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  const requestUrl = new URL(request.url)
+  const { searchParams } = requestUrl
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
   const next = searchParams.get('next') ?? '/'
@@ -17,10 +18,10 @@ export async function GET(request: NextRequest) {
     })
     if (!error) {
       // transform query string (?code=...)
-      return NextResponse.redirect(next)
+      return NextResponse.redirect(new URL(next, requestUrl))
     }
   }
 
   // return the user to an error page with some instructions
-  return NextResponse.redirect('/error')
+  return NextResponse.redirect(new URL('/error', requestUrl))
 }

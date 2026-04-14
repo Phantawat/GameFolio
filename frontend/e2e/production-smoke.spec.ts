@@ -65,4 +65,22 @@ test.describe('Production Smoke Tests', () => {
     // Should redirect to /login for unauthenticated users
     await expect(page).toHaveURL(/\/login/)
   })
+
+  test('9: /signup renders required registration fields', async ({ page }) => {
+    await page.goto('/signup')
+    await expect(page.getByLabel(/email/i)).toBeVisible()
+    await expect(page.getByLabel(/^password$/i)).toBeVisible()
+    await expect(page.getByLabel(/confirm password/i)).toBeVisible()
+    await expect(page.getByRole('checkbox', { name: /terms and conditions and privacy policy/i })).toBeVisible()
+  })
+
+  test('10: tournaments dashboard page shows coming soon placeholder for authenticated player', async ({ page }) => {
+    test.skip(!hasCredentials('player'), 'Missing E2E_PLAYER credentials')
+    await loginAs(page, 'player')
+
+    await page.goto('/dashboard/tournaments')
+    await expect(page.getByRole('heading', { name: /tournaments/i })).toBeVisible()
+    await expect(page.getByText(/coming soon/i)).toBeVisible()
+    await expect(page.getByText(/in rollout/i)).toBeVisible()
+  })
 })

@@ -149,4 +149,28 @@ describe('ApplyButton', () => {
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
     })
   })
+
+  it('7: cancel button does not submit application action', async () => {
+    const user = userEvent.setup()
+
+    render(<ApplyButton tryoutId="uuid-1" alreadyApplied={false} />)
+
+    await user.click(screen.getByRole('button', { name: /apply now/i }))
+    await screen.findByTestId('dialog-content')
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(applyToTryout).not.toHaveBeenCalled()
+  })
+
+  it('8: does not open dialog when already applied', async () => {
+    const user = userEvent.setup()
+
+    render(<ApplyButton tryoutId="uuid-1" alreadyApplied={true} />)
+
+    const appliedBtn = screen.getByRole('button', { name: /applied/i })
+    expect(appliedBtn).toBeDisabled()
+
+    await user.click(appliedBtn)
+    expect(screen.queryByTestId('dialog-content')).not.toBeInTheDocument()
+  })
 })

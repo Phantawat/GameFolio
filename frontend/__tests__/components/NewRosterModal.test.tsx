@@ -98,4 +98,15 @@ describe('NewRosterModal', () => {
     expect(screen.getByRole('button', { name: /create now/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /\+ new roster/i })).not.toBeInTheDocument()
   })
+
+  it('6: dialog includes accessible description and hidden organization field', async () => {
+    const user = userEvent.setup()
+    render(<NewRosterModal orgId={ORG_ID} games={GAMES} />)
+
+    await user.click(screen.getByRole('button', { name: /new roster/i }))
+    const dialog = await screen.findByRole('dialog')
+
+    expect(within(dialog).getByText(/create a new organizational unit for your players/i)).toBeInTheDocument()
+    expect(document.querySelector('input[name="organization_id"]')).toHaveValue(ORG_ID)
+  })
 })

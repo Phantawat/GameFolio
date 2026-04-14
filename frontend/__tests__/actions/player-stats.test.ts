@@ -13,9 +13,15 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
+  deletePlayerHighlight,
   togglePlayerAvailability,
+  updateCompetitiveExperience,
+  updateHardwareDetails,
+  updatePlayerExtras,
+  updatePlayerProfile,
   upsertGameStats,
   uploadPlayerAvatar,
+  uploadPlayerHighlight,
 } from '@/app/(dashboard)/dashboard/player/actions'
 
 const MOCK_USER = { id: 'user-1', email: 'user@example.com' }
@@ -188,6 +194,258 @@ describe('togglePlayerAvailability()', () => {
     const result = await togglePlayerAvailability(null, fd)
 
     expect(result).toEqual({ success: 'Status updated: Not Looking for Team.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
+  })
+})
+
+describe('updatePlayerProfile()', () => {
+  it('1: returns duplicate-gamertag error when DB returns 23505', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: { code: '23505' } },
+        ],
+      }) as any
+    )
+
+    const result = await updatePlayerProfile(
+      null,
+      toFormData({ gamertag: 'Ace', region: 'NA', bio: 'Controller main' })
+    )
+
+    expect(result).toEqual({ error: 'This gamertag is already taken. Please choose another one.' })
+  })
+
+  it('2: returns success and revalidates path on update success', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await updatePlayerProfile(
+      null,
+      toFormData({ gamertag: 'Ace', region: 'NA', bio: 'IGL' })
+    )
+
+    expect(result).toEqual({ success: 'Profile updated successfully.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
+  })
+})
+
+describe('updatePlayerExtras()', () => {
+  it('1: returns profile-not-found when player profile is missing', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({ user: MOCK_USER, fromChains: [{ data: null, error: null }] }) as any
+    )
+
+    const result = await updatePlayerExtras(
+      null,
+      toFormData({ competitive_experience: 'Tier 2', hardware_details: 'Logitech setup' })
+    )
+
+    expect(result.error).toMatch(/player profile not found/i)
+  })
+
+  it('2: returns success when extras update succeeds', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await updatePlayerExtras(
+      null,
+      toFormData({ competitive_experience: 'Tier 2 LAN', hardware_details: '240hz monitor' })
+    )
+
+    expect(result).toEqual({ success: 'Experience and hardware updated.' })
+  })
+})
+
+describe('updateHardwareDetails()', () => {
+  it('1: returns error when all hardware fields are empty', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({ user: MOCK_USER, fromChains: [{ data: { id: 'profile-1' }, error: null }] }) as any
+    )
+
+    const result = await updateHardwareDetails(
+      null,
+      toFormData({ mouse: '', keyboard: '', mousepad: '', headset: '', monitor: '' })
+    )
+
+    expect(result).toEqual({ error: 'Please provide at least one hardware field.' })
+  })
+
+  it('2: returns success when one or more fields are provided', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await updateHardwareDetails(
+      null,
+      toFormData({ mouse: 'GPX', keyboard: '', mousepad: '', headset: '', monitor: '' })
+    )
+
+    expect(result).toEqual({ success: 'Hardware details updated.' })
+  })
+})
+
+describe('updateCompetitiveExperience()', () => {
+  it('1: returns invalid-format error when JSON parsing fails', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({ user: MOCK_USER, fromChains: [{ data: { id: 'profile-1' }, error: null }] }) as any
+    )
+
+    const result = await updateCompetitiveExperience(
+      null,
+      toFormData({ experiences_json: 'not-json' })
+    )
+
+    expect(result).toEqual({ error: 'Invalid experience data format.' })
+  })
+
+  it('2: returns success for valid structured experience payload', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await updateCompetitiveExperience(
+      null,
+      toFormData({
+        experiences_json: JSON.stringify([
+          {
+            year: '2025',
+            role: 'IGL',
+            game: 'Valorant',
+            team: 'GameFolio Academy',
+            highlights: 'Reached playoffs',
+          },
+        ]),
+      })
+    )
+
+    expect(result).toEqual({ success: 'Competitive experience updated.' })
+  })
+})
+
+describe('uploadPlayerHighlight()', () => {
+  it('1: returns error when title is too short', async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ user: MOCK_USER }) as any)
+    const fd = new FormData()
+    fd.append('title', 'Hi')
+    fd.append('duration_seconds', '30')
+    fd.append('video', new File([new Blob(['video'])], 'clip.mp4', { type: 'video/mp4' }))
+
+    const result = await uploadPlayerHighlight(null, fd)
+
+    expect(result).toEqual({ error: 'Highlight title must be at least 3 characters.' })
+  })
+
+  it('2: returns error when duration is over 120 seconds', async () => {
+    vi.mocked(createClient).mockResolvedValue(makeSupabaseMock({ user: MOCK_USER }) as any)
+    const fd = new FormData()
+    fd.append('title', 'Round clutch')
+    fd.append('duration_seconds', '121')
+    fd.append('video', new File([new Blob(['video'])], 'clip.mp4', { type: 'video/mp4' }))
+
+    const result = await uploadPlayerHighlight(null, fd)
+
+    expect(result).toEqual({ error: 'Video must be shorter than 2 minutes.' })
+  })
+
+  it('3: uploads highlight and returns success when DB insert succeeds', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const fd = new FormData()
+    fd.append('title', 'Round clutch')
+    fd.append('duration_seconds', '45')
+    fd.append('video', new File([new Blob(['video'])], 'clip.mp4', { type: 'video/mp4' }))
+
+    const result = await uploadPlayerHighlight(null, fd)
+
+    expect(result).toEqual({ success: 'Highlight uploaded successfully.' })
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
+  })
+})
+
+describe('deletePlayerHighlight()', () => {
+  const VALID_HIGHLIGHT_ID = '00000050-0000-4000-8000-000000000050'
+
+  it('1: returns highlight-not-found when highlight does not belong to user profile', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await deletePlayerHighlight(
+      null,
+      toFormData({ highlight_id: VALID_HIGHLIGHT_ID })
+    )
+
+    expect(result).toEqual({ error: 'Highlight not found.' })
+  })
+
+  it('2: removes highlight and returns success', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { id: 'profile-1' }, error: null },
+          {
+            data: {
+              id: VALID_HIGHLIGHT_ID,
+              video_url:
+                'https://example.com/storage/v1/object/public/player_highlights/path/to/clip.mp4',
+            },
+            error: null,
+          },
+          { data: null, error: null },
+        ],
+      }) as any
+    )
+
+    const result = await deletePlayerHighlight(
+      null,
+      toFormData({ highlight_id: VALID_HIGHLIGHT_ID })
+    )
+
+    expect(result).toEqual({ success: 'Highlight deleted.' })
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard/player')
   })
 })

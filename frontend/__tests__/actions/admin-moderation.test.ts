@@ -264,4 +264,21 @@ describe('toggleUserSuspension()', () => {
     expect(result).toEqual({ success: 'User account suspended.' })
     expect(revalidatePath).toHaveBeenCalledWith('/admin')
   })
+
+  it('4: returns error when DB update fails', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: ADMIN_USER,
+        fromChains: [
+          { data: { role: 'PLATFORM_ADMIN' }, error: null },
+          { data: null, error: { message: 'update failed' } },
+        ],
+      }) as any
+    )
+
+    const fd = toFormData({ user_id: VALID_USER_ID, is_suspended: 'false' })
+    const result = await toggleUserSuspension(null, fd)
+
+    expect(result).toEqual({ error: 'Failed to update user account status.' })
+  })
 })

@@ -22,6 +22,7 @@ export function makeChain(resolveWith: { data: any; error: any } = { data: null,
   chain.delete = vi.fn().mockImplementation(returnSelf)
   chain.eq = vi.fn().mockImplementation(returnSelf)
   chain.in = vi.fn().mockImplementation(returnSelf)
+  chain.ilike = vi.fn().mockImplementation(returnSelf)
   chain.neq = vi.fn().mockImplementation(returnSelf)
   chain.order = vi.fn().mockImplementation(returnSelf)
   chain.limit = vi.fn().mockImplementation(returnSelf)
@@ -74,6 +75,7 @@ export function makeSupabaseMock(options: {
     storage: {
       from: vi.fn().mockReturnValue({
         upload: vi.fn().mockResolvedValue({ error: null }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
         getPublicUrl: vi.fn().mockReturnValue({
           data: { publicUrl: 'https://example.com/logo.png' },
         }),

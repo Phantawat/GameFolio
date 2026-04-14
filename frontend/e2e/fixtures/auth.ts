@@ -22,8 +22,53 @@ const ROLE_CREDENTIALS: Record<E2ERole, Credentials | null> = {
   onboardingPlayer: fromEnv('E2E_ONBOARDING_PLAYER_EMAIL', 'E2E_ONBOARDING_PLAYER_PASSWORD'),
 }
 
+const roleActivationChecked = new Set<E2ERole>()
+
 export function hasCredentials(role: E2ERole): boolean {
   return Boolean(ROLE_CREDENTIALS[role])
+}
+
+async function submitLogin(page: Page, credentials: Credentials): Promise<void> {
+  await page.goto('/login')
+  await page.getByLabel(/email/i).fill(credentials.email)
+  await page.getByLabel(/password/i).fill(credentials.password)
+  await page.getByRole('button', { name: /^(sign in|log in)$/i }).click()
+}
+
+async function ensureRoleActiveWithAdmin(page: Page, role: E2ERole): Promise<void> {
+  if (role === 'admin') return
+  if (roleActivationChecked.has(role)) return
+
+  const targetCredentials = ROLE_CREDENTIALS[role]
+  const adminCredentials = ROLE_CREDENTIALS.admin
+  const browser = page.context().browser()
+
+  if (!targetCredentials || !adminCredentials || !browser) {
+    return
+  }
+
+  const adminContext = await browser.newContext()
+
+  try {
+    const adminPage = await adminContext.newPage()
+    await submitLogin(adminPage, adminCredentials)
+    await expect(adminPage).not.toHaveURL(/\/login(?:\?.*)?$/)
+
+    await adminPage.goto('/admin')
+
+    const targetRow = adminPage.locator('tr').filter({ hasText: targetCredentials.email }).first()
+    await expect(targetRow).toBeVisible({ timeout: 10000 })
+
+    const reactivateButton = targetRow.getByRole('button', { name: /reactivate/i }).first()
+    if (await reactivateButton.count()) {
+      await reactivateButton.click()
+      await expect(targetRow.getByText('Active', { exact: true })).toBeVisible({ timeout: 10000 })
+    }
+
+    roleActivationChecked.add(role)
+  } finally {
+    await adminContext.close()
+  }
 }
 
 export async function loginAs(page: Page, role: E2ERole): Promise<void> {
@@ -32,12 +77,10 @@ export async function loginAs(page: Page, role: E2ERole): Promise<void> {
     throw new Error(`Missing credentials for role: ${role}`)
   }
 
-  await page.goto('/login')
-  await page.getByLabel(/email/i).fill(credentials.email)
-  await page.getByLabel(/password/i).fill(credentials.password)
-  await page.getByRole('button', { name: /sign in|log in/i }).click()
+  await ensureRoleActiveWithAdmin(page, role)
+  await submitLogin(page, credentials)
 
-  await expect(page).not.toHaveURL(/\/login$/)
+  await expect(page).not.toHaveURL(/\/login(?:\?.*)?$/)
 }
 
 export async function ensureDialogAccepted(page: Page): Promise<void> {

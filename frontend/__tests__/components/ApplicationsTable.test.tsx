@@ -161,4 +161,32 @@ describe('ApplicationsTable', () => {
     expect(screen.getByText('10')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
   })
+
+  it('9: empty All filter shows create-tryout CTA link', () => {
+    render(<ApplicationsTable applications={[]} stats={EMPTY_STATS} />)
+
+    const cta = screen.getByRole('link', { name: /view active tryouts/i })
+    expect(cta).toHaveAttribute('href', '/org/tryouts/new')
+  })
+
+  it('10: empty non-All filter hides create-tryout CTA', async () => {
+    const user = userEvent.setup()
+    render(<ApplicationsTable applications={[]} stats={EMPTY_STATS} />)
+
+    await user.click(screen.getByRole('button', { name: 'Pending' }))
+
+    expect(screen.queryByRole('link', { name: /view active tryouts/i })).not.toBeInTheDocument()
+  })
+
+  it('11: applicant row links to recruiter profile detail route', () => {
+    render(
+      <ApplicationsTable
+        applications={[makeApp({ id: 'app-42', gamertag: 'LinkTester', status: 'PENDING' })]}
+        stats={EMPTY_STATS}
+      />
+    )
+
+    const link = screen.getByRole('link', { name: /view player resume/i })
+    expect(link).toHaveAttribute('href', '/org/applications/app-42/profile')
+  })
 })

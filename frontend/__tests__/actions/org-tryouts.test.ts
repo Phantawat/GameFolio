@@ -204,7 +204,82 @@ describe('createTryout()', () => {
 describe('updateTryout()', () => {
   const VALID_TRYOUT_ID = '00000003-0000-4000-8000-000000000003'
 
-  it('1: persists job_description on update payload', async () => {
+  it('1: returns permission error when user is not OWNER or MANAGER', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [{ data: null, error: null }],
+      }) as any
+    )
+
+    const fd = toFormData({
+      tryout_id: VALID_TRYOUT_ID,
+      organization_id: VALID_ORG_ID,
+      game_id: VALID_GAME_ID,
+      title: 'No Access Tryout',
+      is_active: 'false',
+    })
+
+    const result = await updateTryout(null, fd)
+
+    expect(result).toEqual({
+      error: 'You do not have permission to edit tryouts for this organization.',
+    })
+  })
+
+  it('2: returns not-found error when tryout does not belong to organization', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { role: 'OWNER' }, error: null },
+          {
+            data: { id: VALID_TRYOUT_ID, organization_id: '00000099-0000-4000-8000-000000000099' },
+            error: null,
+          },
+        ],
+      }) as any
+    )
+
+    const fd = toFormData({
+      tryout_id: VALID_TRYOUT_ID,
+      organization_id: VALID_ORG_ID,
+      game_id: VALID_GAME_ID,
+      title: 'Org Mismatch',
+      is_active: 'false',
+    })
+
+    const result = await updateTryout(null, fd)
+
+    expect(result).toEqual({ error: 'Tryout not found for this organization.' })
+  })
+
+  it('3: returns migration guidance when update is blocked by RLS', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeSupabaseMock({
+        user: MOCK_USER,
+        fromChains: [
+          { data: { role: 'OWNER' }, error: null },
+          { data: { id: VALID_TRYOUT_ID, organization_id: VALID_ORG_ID }, error: null },
+          { data: null, error: { message: 'new row violates row-level security policy' } },
+        ],
+      }) as any
+    )
+
+    const fd = toFormData({
+      tryout_id: VALID_TRYOUT_ID,
+      organization_id: VALID_ORG_ID,
+      game_id: VALID_GAME_ID,
+      title: 'RLS Blocked Tryout',
+      is_active: 'false',
+    })
+
+    const result = await updateTryout(null, fd)
+
+    expect(result.error).toMatch(/permissions policy/i)
+  })
+
+  it('4: persists job_description on update payload', async () => {
     const mockSupabase = makeSupabaseMock({ user: MOCK_USER })
     let updatedData: any = null
 
