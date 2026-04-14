@@ -21,28 +21,28 @@ Out of scope:
 - [x] complete
 
 ## 4) Release Gate Policy (Must Pass)
-- [ ] Gate A: `npm run lint` passes.
-- [ ] Gate B: `npm run test` passes.
-- [ ] Gate C: `npm run build` passes.
-- [ ] Gate D: `npm run test:e2e -- e2e/production-smoke.spec.ts e2e/admin-suspension-flow.spec.ts` passes.
-- [ ] Gate E: `npm run test:e2e` full suite passes on two consecutive CI runs.
+- [x] Gate A: `npm run lint` passes.
+- [x] Gate B: `npm run test` passes.
+- [x] Gate C: `npm run build` passes.
+- [x] Gate D: `npm run test:e2e -- e2e/production-smoke.spec.ts e2e/admin-suspension-flow.spec.ts` passes.
+- [~] Gate E: `npm run test:e2e` full suite passes on two consecutive CI runs.
 
 No production deployment is allowed unless all gates are green.
 
 ## 5) Phase 0 - Close Current Blockers
 
 ### 5.1 Build Blockers
-- [ ] Fix `useSearchParams()` usage to satisfy Next.js production build requirements.
-- [ ] Validate `npm run build` is green locally and in CI.
+- [x] Fix `useSearchParams()` usage to satisfy Next.js production build requirements.
+- [x] Validate `npm run build` is green locally and in CI.
 
 Targets:
 - `frontend/app/(auth)/login/page.tsx`
 - `frontend/app/(auth)/signup/page.tsx`
 
 ### 5.2 Lint Blockers
-- [ ] Resolve app-level lint errors (react hooks and JSX escape issues).
-- [ ] Resolve test lint errors or explicitly scope lint policy for tests with team approval.
-- [ ] Re-run lint until zero errors.
+- [x] Resolve app-level lint errors (react hooks and JSX escape issues).
+- [x] Resolve test lint errors or explicitly scope lint policy for tests with team approval.
+- [x] Re-run lint until zero errors.
 
 Targets:
 - `frontend/app/(dashboard)/dashboard/player/_components/ProfileHeader.tsx`
@@ -53,11 +53,11 @@ Targets:
 - `frontend/app/(dashboard)/dashboard/player/edit-stats/_components/EditGameStatsForm.tsx`
 
 ### 5.3 E2E Stability Blockers
-- [ ] Stabilize strict-mode locator collisions in player/recruiter/admin flows.
-- [ ] Remove shared-account race conditions between specs.
-- [ ] Ensure recruiter-no-org redirection test is isolated from suspension-state mutations.
-- [ ] Ensure admin tryout activation/deactivation assertion matches actual toast/state behavior.
-- [ ] Verify all 39 E2E tests pass consistently.
+- [x] Stabilize strict-mode locator collisions in player/recruiter/admin flows.
+- [x] Remove shared-account race conditions between specs.
+- [x] Ensure recruiter-no-org redirection test is isolated from suspension-state mutations.
+- [x] Ensure admin tryout activation/deactivation assertion matches actual toast/state behavior.
+- [x] Verify all 39 E2E tests pass consistently.
 
 Targets:
 - `frontend/e2e/player-flow.spec.ts`
@@ -68,17 +68,17 @@ Targets:
 - `frontend/e2e/fixtures/auth.ts`
 
 ### 5.4 Platform Compatibility Blocker
-- [ ] Migrate deprecated Next.js middleware convention to proxy convention.
-- [ ] Verify auth/session behavior remains unchanged after migration.
+- [x] Migrate deprecated Next.js middleware convention to proxy convention.
+- [x] Verify auth/session behavior remains unchanged after migration.
 
 Target:
 - `frontend/middleware.ts`
 
 ## 6) Phase 1 - CI Release Gates
-- [ ] Add a required workflow for lint + unit/action/component tests + production build.
-- [ ] Keep smoke Playwright workflow required on protected branches.
-- [ ] Keep full Playwright workflow on nightly and pre-release.
-- [ ] Mark required checks in repository branch protection settings.
+- [x] Add a required workflow for lint + unit/action/component tests + production build.
+- [~] Keep smoke Playwright workflow required on protected branches.
+- [x] Keep full Playwright workflow on nightly and pre-release.
+- [~] Mark required checks in repository branch protection settings.
 
 Targets:
 - `.github/workflows/playwright-smoke-protected.yml`
