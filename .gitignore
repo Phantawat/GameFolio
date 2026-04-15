@@ -54,6 +54,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/.github
+/.github/*
+!/.github/workflows/
+!/.github/workflows/*.yml
 test-results/
 playwright-report/

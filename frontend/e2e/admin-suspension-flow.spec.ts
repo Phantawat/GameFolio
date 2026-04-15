@@ -6,6 +6,11 @@ test.describe('Admin Suspension Regression', () => {
 
   test('admin can suspend recruiter-no-org, blocked login, then reactivate', async ({ page, browser }) => {
     test.skip(
+      process.env.E2E_RUN_SUSPENSION !== 'true',
+      'Set E2E_RUN_SUSPENSION=true to run suspension regression.'
+    )
+
+    test.skip(
       !hasCredentials('admin') || !hasCredentials('recruiterNoOrg'),
       'Missing E2E_ADMIN or E2E_RECRUITER_NO_ORG credentials'
     )

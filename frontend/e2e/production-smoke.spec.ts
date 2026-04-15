@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { hasCredentials, loginAs } from './fixtures/auth'
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
-
 test.describe('Production Smoke Tests', () => {
   test('1: landing page loads with hero text', async ({ page }) => {
     await page.goto('/')

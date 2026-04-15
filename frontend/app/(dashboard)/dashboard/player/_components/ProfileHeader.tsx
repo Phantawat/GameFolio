@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ gamertag, region, avatarUrl, seekingTeam }: ProfileHeaderProps) {
+  const router = useRouter()
   const [uploadState, uploadAction, isUploading] = useActionState(uploadPlayerAvatar, null)
   const [availabilityState, availabilityAction, isAvailabilityPending] = useActionState(
     togglePlayerAvailability,
@@ -31,7 +33,7 @@ export function ProfileHeader({ gamertag, region, avatarUrl, seekingTeam }: Prof
   )
   const formRef = useRef<HTMLFormElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const [isSeekingTeam, setIsSeekingTeam] = useState(seekingTeam ?? true)
+  const isSeekingTeam = seekingTeam ?? true
 
   async function copyProfileLink() {
     try {
@@ -56,9 +58,9 @@ export function ProfileHeader({ gamertag, region, avatarUrl, seekingTeam }: Prof
     }
     if (availabilityState.success) {
       toast.success(availabilityState.success)
-      setIsSeekingTeam((prev) => !prev)
+      router.refresh()
     }
-  }, [availabilityState])
+  }, [availabilityState, router])
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-[#140C0B] overflow-hidden relative shadow-md group">

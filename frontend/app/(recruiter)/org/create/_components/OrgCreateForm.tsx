@@ -70,10 +70,11 @@ export default function OrgCreateForm() {
 
         {/* Organization Name */}
         <div className="space-y-1.5">
-          <Label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
+          <Label htmlFor="org-name" className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
             Organization Name
           </Label>
           <Input
+            id="org-name"
             name="name"
             required
             placeholder="e.g. Cloud9, Team Liquid"
@@ -83,12 +84,13 @@ export default function OrgCreateForm() {
 
         {/* Website URL */}
         <div className="space-y-1.5">
-          <Label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
+          <Label htmlFor="website-url" className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
             Website URL
           </Label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <Input
+              id="website-url"
               name="website_url"
               type="url"
               placeholder="https://organization.com"
@@ -99,7 +101,7 @@ export default function OrgCreateForm() {
 
         {/* Twitter / X Handle */}
         <div className="space-y-1.5">
-          <Label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
+          <Label htmlFor="twitter-handle" className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
             Twitter/X Handle
           </Label>
           <div className="relative">
@@ -107,6 +109,7 @@ export default function OrgCreateForm() {
               @
             </span>
             <Input
+              id="twitter-handle"
               name="twitter_handle"
               placeholder="handle"
               className="bg-[#0F0A09] border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-orange-500/50 focus-visible:border-orange-500/50 h-11 pl-8"

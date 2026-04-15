@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const supabase = createClient()
   
   // Check if we have an active session
-  const { data: { user }, error } = await (await supabase).auth.getUser()
+  const { data: { user } } = await (await supabase).auth.getUser()
 
   if (user) {
     await (await supabase).auth.signOut()

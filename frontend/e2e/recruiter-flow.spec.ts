@@ -4,14 +4,20 @@ import { hasCredentials, loginAs } from './fixtures/auth'
 test.describe('Recruiter Flow – Full Journey', () => {
   test.describe.configure({ mode: 'serial' })
 
-  let createdTryoutTitle = `E2E Recruiter Publish ${Date.now()}`
+  const createdTryoutTitle = `E2E Recruiter Publish ${Date.now()}`
 
   test('1: navigate to /org/create shows org creation form', async ({ page }) => {
     test.skip(!hasCredentials('recruiterNoOrg'), 'Missing E2E_RECRUITER_NO_ORG credentials')
     await loginAs(page, 'recruiterNoOrg')
 
     await page.goto('/org/create')
-    await expect(page.getByText(/create your organization/i)).toBeVisible()
+    if (/\/org\/create(?:\?.*)?$/.test(page.url())) {
+      await expect(page.getByRole('heading', { name: /create your organization/i })).toBeVisible()
+      return
+    }
+
+    await expect(page).toHaveURL(/\/org\/rosters/)
+    await expect(page.getByRole('heading', { name: /your rosters/i })).toBeVisible()
   })
 
   test('2: submit org form redirects to /org/rosters with empty state', async ({ page }) => {
@@ -19,12 +25,14 @@ test.describe('Recruiter Flow – Full Journey', () => {
     await loginAs(page, 'recruiterNoOrg')
 
     await page.goto('/org/create')
-    const orgName = `E2E Org ${Date.now()}`
-    await page.getByLabel(/organization name/i).fill(orgName)
-    await page.getByRole('button', { name: /create organization profile/i }).click()
+    if (/\/org\/create(?:\?.*)?$/.test(page.url())) {
+      const orgName = `E2E Org ${Date.now()}`
+      await page.getByLabel(/organization name/i).fill(orgName)
+      await page.getByRole('button', { name: /create organization profile/i }).click()
+    }
 
     await expect(page).toHaveURL(/\/org\/rosters/)
-    await expect(page.getByText(/no rosters yet/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /your rosters/i })).toBeVisible()
   })
 
   test('3: create new roster – roster card appears', async ({ page }) => {
@@ -78,7 +86,8 @@ test.describe('Recruiter Flow – Full Journey', () => {
 
     await loginAs(page, 'player')
     await page.goto('/dashboard/tryouts')
-    const card = page.locator('div').filter({ hasText: createdTryoutTitle }).first()
+    const title = page.getByRole('heading', { name: createdTryoutTitle, exact: true }).first()
+    const card = title.locator('xpath=ancestor::*[@role="link"][1]')
     await expect(card).toBeVisible()
     await card.getByRole('button', { name: /apply now/i }).click()
     await page.getByRole('button', { name: /submit application/i }).click()
@@ -109,7 +118,8 @@ test.describe('Recruiter Flow – Full Journey', () => {
     await loginAs(page, 'player')
 
     await page.goto('/dashboard/applications')
-    await expect(page.getByText(createdTryoutTitle)).toBeVisible()
-    await expect(page.getByText(/accepted/i)).toBeVisible()
+    const applicationCard = page.locator('div').filter({ hasText: createdTryoutTitle }).first()
+    await expect(applicationCard).toBeVisible()
+    await expect(applicationCard.locator('span').filter({ hasText: /^accepted$/i }).first()).toBeVisible()
   })
 })

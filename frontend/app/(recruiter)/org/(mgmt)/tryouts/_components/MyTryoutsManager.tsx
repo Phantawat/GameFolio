@@ -90,7 +90,6 @@ export function MyTryoutsManager({ items }: Props) {
     if (bulkState.error) toast.error(bulkState.error)
     if (bulkState.success) {
       toast.success(bulkState.success)
-      setSelectedIds([])
       router.refresh()
     }
   }, [bulkState, router])
@@ -147,7 +146,7 @@ export function MyTryoutsManager({ items }: Props) {
               <span className="text-[#FF5C00]">Management</span>
             </p>
             <h1 className="text-5xl font-black tracking-tight text-zinc-100">My Tryouts</h1>
-            <p className="text-sm text-zinc-400">Manage your organization's recruitment postings</p>
+            <p className="text-sm text-zinc-400">Manage your organization&apos;s recruitment postings</p>
           </div>
           <Link
             href="/org/tryouts/new"

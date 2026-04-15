@@ -58,16 +58,17 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
             <AlertTriangle className="w-10 h-10 text-amber-500" />
             <p className="text-zinc-300 font-semibold">No games found in the database</p>
             <p className="text-zinc-500 text-sm max-w-sm">
-              The game catalog hasn't been seeded yet. Run the <code className="text-orange-400 bg-zinc-900 px-1.5 py-0.5 rounded text-xs">supabase/seed.sql</code> script in your Supabase SQL Editor to add games.
+              The game catalog hasn&apos;t been seeded yet. Run the <code className="text-orange-400 bg-zinc-900 px-1.5 py-0.5 rounded text-xs">supabase/seed.sql</code> script in your Supabase SQL Editor to add games.
             </p>
           </div>
         ) : (
         <form action={action} className="space-y-6">
           {/* Game Selector */}
           <div className="space-y-2">
-            <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Game *</Label>
+            <Label htmlFor="game-select" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Game *</Label>
             <div className="relative">
               <select
+                id="game-select"
                 name="game_id"
                 required
                 value={selectedGameId}
@@ -86,9 +87,10 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
           {/* Role Selector - only shown with a game selected */}
           {selectedGame && (
             <div className="space-y-2">
-              <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Main Role</Label>
+              <Label htmlFor="main-role-select" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Main Role</Label>
               <div className="relative">
                 <select
+                  id="main-role-select"
                   name="main_role_id"
                   defaultValue={existingStat?.main_role_id || ''}
                   className="w-full appearance-none rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-100 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50 transition-all"
@@ -105,8 +107,9 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
 
           {/* Rank */}
           <div className="space-y-2">
-            <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Current Rank *</Label>
+            <Label htmlFor="current-rank" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Current Rank *</Label>
             <Input
+              id="current-rank"
               name="rank"
               placeholder="e.g. Radiant #124, Diamond 1, Global Elite"
               required
@@ -118,8 +121,9 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
           {/* Grid: MMR, Win Rate, Hours */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">MMR</Label>
+              <Label htmlFor="mmr" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">MMR</Label>
               <Input
+                id="mmr"
                 name="mmr"
                 type="number"
                 min={0}
@@ -129,8 +133,9 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Win Rate %</Label>
+              <Label htmlFor="win-rate" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Win Rate %</Label>
               <Input
+                id="win-rate"
                 name="win_rate"
                 type="number"
                 min={0}
@@ -142,8 +147,9 @@ export function EditGameStatsForm({ games, existingStats }: EditGameStatsFormPro
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Hours Played</Label>
+              <Label htmlFor="hours-played" className="text-zinc-300 font-semibold uppercase text-xs tracking-wider">Hours Played</Label>
               <Input
+                id="hours-played"
                 name="hours_played"
                 type="number"
                 min={0}
