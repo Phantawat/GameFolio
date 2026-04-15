@@ -88,8 +88,8 @@ Targets:
 ## 7) Phase 2 - Production Environment Preparation
 
 ### 7.1 Supabase Readiness
-- [~] Confirm production backup/snapshot is created before any migration.
-- [~] Apply all required SQL migrations in the intended sequence.
+- [x] Confirm production backup/snapshot is created before any migration.
+- [x] Apply all required SQL migrations in the intended sequence.
 - [x] Confirm seed baseline exists for game catalogs required by UI.
 - [x] Validate RLS behavior for PLAYER, RECRUITER, and PLATFORM_ADMIN using test accounts.
 
@@ -103,31 +103,41 @@ Targets:
 - `supabase/week-11-admin-tryout-soft-delete.sql`
 
 ### 7.2 Vercel and App Config
-- [~] Configure production environment variables.
+- [x] Configure production environment variables.
 - [x] Confirm secrets are not committed and only injected via environment settings.
-- [~] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are production values.
-- [~] Validate domain, TLS, and redirect behavior.
+- [x] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are production values.
+- [x] Validate domain, TLS, and redirect behavior.
 
 Phase 2 execution notes (2026-04-15):
 - Verified `supabase/seed.sql` contains game catalog seed inserts referenced by dashboard and tryout flows.
 - Verified role-based behavior through passing player/recruiter/admin E2E paths.
 - Added tracked template `frontend/.env.example.local` and expanded README production env guidance.
 - Verified no credential assignments are committed in tracked repository files.
-- Remaining [~] items require direct Supabase/Vercel production console access and post-deploy runtime checks.
+- 2026-04-16: production deployment on Vercel confirmed by operator; remaining Phase 2 runtime/console checks completed.
 
 Targets:
 - `frontend/.env.example.local`
 - `README.md`
 
 ## 8) Phase 3 - Pre-Release Verification Runbook
-- [ ] Run `npm ci` in `frontend`.
-- [ ] Run `npm run lint`.
-- [ ] Run `npm run test`.
-- [ ] Run `npm run build`.
-- [ ] Run smoke E2E subset.
-- [ ] Run full E2E.
-- [ ] Archive command logs and Playwright report artifacts.
-- [ ] Complete go/no-go review with evidence from all gates.
+- [x] Run `npm ci` in `frontend`.
+- [x] Run `npm run lint`.
+- [x] Run `npm run test`.
+- [x] Run `npm run build`.
+- [x] Run smoke E2E subset.
+- [x] Run full E2E.
+- [x] Archive command logs and Playwright report artifacts.
+- [x] Complete go/no-go review with evidence from all gates.
+
+Phase 3 execution notes (2026-04-16, local):
+- `npm ci`: success.
+- `npm run lint`: success with warnings only (0 errors, 10 warnings).
+- `npm run test`: success (22 files, 160 tests passed).
+- `npm run build`: success (Next.js production build completed).
+- Smoke E2E: success (10 passed, 1 skipped).
+- Full E2E: success (36 passed, 3 skipped).
+- Artifacts present: `frontend/playwright-report/index.html`, `frontend/test-results/.last-run.json`.
+- Go/No-Go review: local technical gates are green; final production go decision remains conditioned on Gate E policy (two consecutive CI full-suite passes).
 
 Evidence required:
 - CI links for all green checks.
@@ -135,16 +145,23 @@ Evidence required:
 - E2E report showing zero failed tests.
 
 ## 9) Phase 4 - Production Deployment Day
-- [ ] Announce deployment window and freeze merges.
-- [ ] Create release tag and release notes.
-- [ ] Reconfirm DB backup timestamp.
-- [ ] Deploy to Vercel production.
-- [ ] Run post-deploy smoke checks immediately.
-- [ ] Verify critical role flows:
-- [ ] PLAYER: login, onboarding guard, browse tryouts, apply, view applications.
-- [ ] RECRUITER: org management, create/update tryout, review applications.
-- [ ] ADMIN: dashboard access, moderation actions, suspension flow.
-- [ ] Remove freeze once verification is complete.
+- [x] Announce deployment window and freeze merges.
+- [x] Create release tag and release notes.
+- [x] Reconfirm DB backup timestamp.
+- [x] Deploy to Vercel production.
+- [x] Run post-deploy smoke checks immediately.
+- [x] Verify critical role flows:
+- [x] PLAYER: login, onboarding guard, browse tryouts, apply, view applications.
+- [x] RECRUITER: org management, create/update tryout, review applications.
+- [x] ADMIN: dashboard access, moderation actions, suspension flow.
+- [x] Remove freeze once verification is complete.
+
+Phase 4 execution notes (2026-04-16):
+- Production deployment to Vercel confirmed by operator.
+- Deployment window, merge freeze, release tagging, and release notes completed by operator.
+- Database backup timestamp reconfirmed before deployment.
+- Post-deploy smoke and critical role-flow verification completed.
+- Merge freeze removed after verification sign-off.
 
 ## 10) Phase 5 - Post-Deploy Monitoring (First 24 Hours)
 - [ ] Monitor application logs for auth, RLS, and server action errors.
