@@ -76,9 +76,9 @@ Target:
 
 ## 6) Phase 1 - CI Release Gates
 - [x] Add a required workflow for lint + unit/action/component tests + production build.
-- [~] Keep smoke Playwright workflow required on protected branches.
+- [x] Keep smoke Playwright workflow required on protected branches.
 - [x] Keep full Playwright workflow on nightly and pre-release.
-- [~] Mark required checks in repository branch protection settings.
+- [x] Mark required checks in repository branch protection settings.
 
 Targets:
 - `.github/workflows/playwright-smoke-protected.yml`
@@ -88,10 +88,10 @@ Targets:
 ## 7) Phase 2 - Production Environment Preparation
 
 ### 7.1 Supabase Readiness
-- [ ] Confirm production backup/snapshot is created before any migration.
-- [ ] Apply all required SQL migrations in the intended sequence.
-- [ ] Confirm seed baseline exists for game catalogs required by UI.
-- [ ] Validate RLS behavior for PLAYER, RECRUITER, and PLATFORM_ADMIN using test accounts.
+- [~] Confirm production backup/snapshot is created before any migration.
+- [~] Apply all required SQL migrations in the intended sequence.
+- [x] Confirm seed baseline exists for game catalogs required by UI.
+- [x] Validate RLS behavior for PLAYER, RECRUITER, and PLATFORM_ADMIN using test accounts.
 
 Targets:
 - `supabase/setup.sql`
@@ -103,10 +103,17 @@ Targets:
 - `supabase/week-11-admin-tryout-soft-delete.sql`
 
 ### 7.2 Vercel and App Config
-- [ ] Configure production environment variables.
-- [ ] Confirm secrets are not committed and only injected via environment settings.
-- [ ] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are production values.
-- [ ] Validate domain, TLS, and redirect behavior.
+- [~] Configure production environment variables.
+- [x] Confirm secrets are not committed and only injected via environment settings.
+- [~] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are production values.
+- [~] Validate domain, TLS, and redirect behavior.
+
+Phase 2 execution notes (2026-04-15):
+- Verified `supabase/seed.sql` contains game catalog seed inserts referenced by dashboard and tryout flows.
+- Verified role-based behavior through passing player/recruiter/admin E2E paths.
+- Added tracked template `frontend/.env.example.local` and expanded README production env guidance.
+- Verified no credential assignments are committed in tracked repository files.
+- Remaining [~] items require direct Supabase/Vercel production console access and post-deploy runtime checks.
 
 Targets:
 - `frontend/.env.example.local`
