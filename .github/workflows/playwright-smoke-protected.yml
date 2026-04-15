@@ -1,0 +1,80 @@
+name: Playwright Smoke (Protected Branches)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-subset:
+    name: smoke-subset
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      E2E_PLAYER_EMAIL: ${{ secrets.E2E_PLAYER_EMAIL }}
+      E2E_PLAYER_PASSWORD: ${{ secrets.E2E_PLAYER_PASSWORD }}
+      E2E_RECRUITER_EMAIL: ${{ secrets.E2E_RECRUITER_EMAIL }}
+      E2E_RECRUITER_PASSWORD: ${{ secrets.E2E_RECRUITER_PASSWORD }}
+      E2E_RECRUITER_NO_ORG_EMAIL: ${{ secrets.E2E_RECRUITER_NO_ORG_EMAIL }}
+      E2E_RECRUITER_NO_ORG_PASSWORD: ${{ secrets.E2E_RECRUITER_NO_ORG_PASSWORD }}
+      E2E_ONBOARDING_PLAYER_EMAIL: ${{ secrets.E2E_ONBOARDING_PLAYER_EMAIL }}
+      E2E_ONBOARDING_PLAYER_PASSWORD: ${{ secrets.E2E_ONBOARDING_PLAYER_PASSWORD }}
+      E2E_RUN_SUSPENSION: 'true'
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start App
+        run: |
+          npm run dev > /tmp/gamefolio-dev.log 2>&1 &
+          for i in {1..90}; do
+            if curl -sSf http://127.0.0.1:3000/login > /dev/null; then
+              echo "App is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App failed to start"
+          tail -n 200 /tmp/gamefolio-dev.log
+          exit 1
+
+      - name: Run Smoke Subset
+        run: npx playwright test e2e/production-smoke.spec.ts e2e/admin-suspension-flow.spec.ts --reporter=line
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
