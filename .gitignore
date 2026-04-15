@@ -17,6 +17,7 @@ Desktop.ini
 .env
 .env.*
 !.env.example
+!frontend/.env.example.local
 
 # dependencies
 node_modules/

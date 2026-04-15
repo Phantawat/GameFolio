@@ -8,8 +8,7 @@ import { signup } from '@/app/auth/actions'
 import { toast } from 'sonner'
 import { useActionState, useState, useEffect } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Eye, EyeOff, Sparkles, Gamepad2, Loader2, Flame, Play } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
+import { Eye, EyeOff, Sparkles, Loader2, Flame, Play } from 'lucide-react'
 
 export default function SignupPage() {
   const [flashMessage] = useState<string | null>(() => {
@@ -181,17 +180,6 @@ export default function SignupPage() {
               )}
             </Button>
           </form>
-
-              <div className="relative flex items-center py-1">
-                <Separator className="flex-1 bg-zinc-800" />
-                <span className="px-2 text-xs uppercase text-zinc-500">Or</span>
-                <Separator className="flex-1 bg-zinc-800" />
-              </div>
-
-              <Button variant="secondary" className="h-11 w-full border-0 bg-[#5865F2] font-semibold text-white hover:bg-[#4752C4]">
-                <Gamepad2 className="mr-2 h-5 w-5" />
-                Sign up with Discord
-              </Button>
 
               <div className="pt-1 text-center text-sm text-zinc-400">
                 Already have an account?

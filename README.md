@@ -85,7 +85,7 @@ frontend/
    ```
 
 3. Set up environment variables:
-   Create a `.env.local` file in the `frontend` directory and add your Supabase credentials:
+   Copy `frontend/.env.example.local` to `frontend/.env.local` and fill your project values:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -120,6 +120,26 @@ E2E_RECRUITER_NO_ORG_PASSWORD=E2ENoOrgPass!123
 E2E_ONBOARDING_PLAYER_EMAIL=e2e-onboarding@gamefolio.test
 E2E_ONBOARDING_PLAYER_PASSWORD=E2EOnboardPass!123
 ```
+
+### 4. Production Environment Checklist (Phase 2)
+
+1. GitHub Actions secrets (Repository Settings -> Secrets and variables -> Actions)
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`
+   - `E2E_PLAYER_EMAIL`, `E2E_PLAYER_PASSWORD`
+   - `E2E_RECRUITER_EMAIL`, `E2E_RECRUITER_PASSWORD`
+   - `E2E_RECRUITER_NO_ORG_EMAIL`, `E2E_RECRUITER_NO_ORG_PASSWORD`
+   - `E2E_ONBOARDING_PLAYER_EMAIL`, `E2E_ONBOARDING_PLAYER_PASSWORD`
+
+2. Vercel production env vars
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+3. Domain and TLS verification after deploy
+   - `curl -I https://<your-domain>` returns `200` or expected redirect chain.
+   - `curl -I http://<your-domain>` redirects to HTTPS.
+   - Login, signup, and dashboard routes resolve correctly on production domain.
 
 ---
 
